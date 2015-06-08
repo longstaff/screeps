@@ -1,5 +1,11 @@
+var Defence = require('defenceCreep');
+var Harvest = require('harvestCreep');
+var Worker = require('workerCreep');
+var Constants = require('const');
+
 module.exports = function (spawn) {
 
+    /*
 	var CREEP_DEFENCE = "DEFENCE";
 	var CREEP_OFFENCE = "OFFENCE";
 	var CREEP_WORKER = "WORKER";
@@ -9,6 +15,10 @@ module.exports = function (spawn) {
 	var STATE_STORE = "STORE";
 	var STATE_EXPAND = "EXPAND";
 	var STATE_SPREAD = "SPREAD";
+
+    console.log(Constants.CREEP_DEFENCE);
+    */
+
 	var currentState = spawn.memory.state;
 
 	if(!spawn.memory.screeps){
@@ -54,16 +64,16 @@ module.exports = function (spawn) {
         
         if(!screepIsDead(creeps[creep], creepObj)){
 			switch(creepObj.memory.job){
-				case CREEP_DEFENCE:
+				case Constants.CREEP_DEFENCE:
 					defenceCreeps ++;
 					break;
-				case CREEP_OFFENCE:
+				case Constants.CREEP_OFFENCE:
 					offenceCreeps ++;
 					break;
-				case CREEP_WORKER:
+				case Constants.CREEP_WORKER:
 					workerCreeps ++;
 					break;
-				case CREEP_HARVESTER:
+				case Constants.CREEP_HARVESTER:
 					harvesterCreeps ++;
 					break;
 			}
@@ -77,16 +87,16 @@ module.exports = function (spawn) {
 	function setState(){
 		//TODO: set states
 		if(defenceCreeps < 5 || harvesterCreeps < 5){
-		    spawn.memory.state = STATE_DEFENCE;
+		    spawn.memory.state = Constants.STATE_DEFENCE;
 		}
 		else if(canExpand()){
-		    spawn.memory.state = STATE_EXPAND;
+		    spawn.memory.state = Constants.STATE_EXPAND;
 		}
 		else if(spawn.room.controller && spawn.room.controller.level < 3){
-		    spawn.memory.state = STATE_STORE;
+		    spawn.memory.state = Constants.STATE_STORE;
 		}
 		else{
-		    spawn.memory.state = STATE_SPREAD;
+		    spawn.memory.state = Constants.STATE_SPREAD;
 		}
 	}
 	function canExpand(){
@@ -197,7 +207,7 @@ module.exports = function (spawn) {
 	
 	function createNextCreep(state, creeps){
 		switch(state){
-			case STATE_DEFENCE:
+			case Constants.STATE_DEFENCE:
 				if(defenceCreeps == 0 || defenceCreeps < harvesterCreeps){
 					if(defenceCreeps%2 == 0){
 						makeDefenceRangeCreep();
@@ -210,13 +220,13 @@ module.exports = function (spawn) {
 					makeHarvesterCreep();
 				}
 				break;
-			case STATE_EXPAND:
+			case Constants.STATE_EXPAND:
 				makeWorkerCreep();
 				break;
-			case STATE_STORE:
+			case Constants.STATE_STORE:
 				makeWorkerCreep();
 				break;
-		    case STATE_SPREAD:
+		    case Constants.STATE_SPREAD:
 				makeWorkerCreep();
 		        //makeOffenceCreep();
 		        break;
@@ -224,37 +234,37 @@ module.exports = function (spawn) {
 	}
 
 	function makeDefenceShortCreep(){
-    	var creep = spawn.createCreep([MOVE, MOVE, ATTACK], undefined, {job:CREEP_DEFENCE});
+    	var creep = spawn.createCreep([MOVE, MOVE, ATTACK], undefined, {job:Constants.CREEP_DEFENCE});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
 	}
 	function makeDefenceRangeCreep(){
-    	var creep = spawn.createCreep([TOUGH, MOVE, RANGED_ATTACK], undefined, {job:CREEP_DEFENCE});
+    	var creep = spawn.createCreep([TOUGH, MOVE, RANGED_ATTACK], undefined, {job:Constants.CREEP_DEFENCE});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
 	}
 	function makeOffenceShortCreep(){
-    	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, ATTACK], undefined, {job:CREEP_OFFENCE});
+    	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, ATTACK], undefined, {job:Constants.CREEP_OFFENCE});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
 	}
 	function makeOffenceRangeCreep(){
-    	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, RANGED_ATTACK], undefined, {job:CREEP_OFFENCE});
+    	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, RANGED_ATTACK], undefined, {job:Constants.CREEP_OFFENCE});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
 	}
 	function makeHarvesterCreep(){
-    	var creep = spawn.createCreep([WORK, CARRY, MOVE], undefined, {job:CREEP_HARVESTER});
+    	var creep = spawn.createCreep([WORK, CARRY, MOVE], undefined, {job:Constants.CREEP_HARVESTER});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
 	}
 	function makeWorkerCreep(){
-    	var creep = spawn.createCreep([WORK, WORK, CARRY, CARRY, MOVE], undefined, {job:CREEP_WORKER});
+    	var creep = spawn.createCreep([WORK, WORK, CARRY, CARRY, MOVE], undefined, {job:Constants.CREEP_WORKER});
     	if(typeof(creep) === "string"){
     		spawn.memory.screeps.push(creep);
     	}
@@ -294,179 +304,16 @@ module.exports = function (spawn) {
 
 		if(!screepIsDead(creeps[creep], creepObj)){
 
-    		if(creepObj.memory.job === CREEP_DEFENCE || creepObj.memory.job === CREEP_OFFENCE) {
-	            var targets = spawn.pos.findInRange(FIND_HOSTILE_CREEPS, 15);
-    			if(targets && targets.length) {
-        			creepObj.moveTo(targets[0]);
-                    if(creepObj.getActiveBodyparts(RANGED_ATTACK) > 0){
-    				    creepObj.rangedAttack(targets[0]);
-                    }
-                    if(creepObj.getActiveBodyparts(ATTACK) > 0){
-    				    creepObj.attack(targets[0]);
-                    }
-    			}
-    			else{
-    			    var pos = spawn.pos;
-    				creepObj.moveTo(pos.x, pos.y + 5);
-    			}
+    		if(creepObj.memory.job === Constants.CREEP_DEFENCE || creepObj.memory.job === Constants.CREEP_OFFENCE) {
+                Defence(spawn, creepObj);
     		}
     
-    		if(creepObj.memory.job === CREEP_HARVESTER) {
-    			if(creepObj.energy < creepObj.energyCapacity) {
-	                var sources = spawn.pos.findInRange(FIND_SOURCES, 10);
-    				creepObj.moveTo(sources[0]);
-    				creepObj.harvest(sources[0]);
-    			}
-    			else {
-    			    var target = spawn;
-    			    if(spawn.energy === spawn.energyCapacity){
-    			        
-    			        var extensions = spawn.pos.findInRange(FIND_MY_STRUCTURES, 15);
-    			        for(var struct in extensions){
-    			            if(extensions[struct].structureType === STRUCTURE_EXTENSION && extensions[struct].energy < extensions[struct].energyCapacity){
-    			                target = extensions[struct];
-    			            }
-    			        }
-    			    }
-    				creepObj.moveTo(target);
-    				creepObj.transferEnergy(target);
-    			}
-    
+    		if(creepObj.memory.job === Constants.CREEP_HARVESTER) {
+                Harvest(spawn, creepObj);
     		}
     		
-    		if(creepObj.memory.job === CREEP_WORKER) {
-    		    
-			    if(creepObj.energy === 0){
-			        creepObj.memory.task = "recharge";
-			    }
-    		    else if(creepObj.energy === creepObj.energyCapacity && currentState === STATE_EXPAND){
-			        creepObj.memory.task = "build";
-    		    }
-    		    else if(creepObj.energy === creepObj.energyCapacity){
-			        creepObj.memory.task = "store";
-    		    }
-    		    
-    			if(creepObj.memory.task === "build" || creepObj.memory.task === "store") {
-    			    
-    			    var repairing = false;
-    			    if(!maintainWorker){
-    			        
-    			        maintainWorker = true;
-    			        
-    			        var currentStructure = spawn.memory.repairingId;
-    			        var repairTarget;
-    			        
-    			        if(currentStructure){
-    			            if(Game.structures[currentStructure] && Game.structures[currentStructure].hits < Game.structures[currentStructure].hitsMax){
-    			                //Stick with one until completely fixed
-    			                repairTarget = Game.structures[currentStructure];
-    			            }
-    			            else{
-    			                //Clear to allow for the next one
-    			                spawn.memory.repairingId = null;
-    			            }
-    			        }
-    			        
-    			        //TODO: FIND ROADS!!!!
-    			        if(!repairTarget){
-    			            //If none locked on, scan to find a new one
-    			            var structures = spawn.room.find(FIND_MY_STRUCTURES);
-    			            for(var repair in structures){
-        			            if(structures[repair].hits < structures[repair].hitsMax/2){
-        			                //Save ID and assign as current target
-    			                    spawn.memory.repairingId = structures[repair].id;
-    			                    repairTarget = structures[repair];
-                    				break;
-        			            }
-        			        }
-    			        }
-    			        
-    			        //If there is a target, fix it!
-    			        if(repairTarget){
-            			    creepObj.moveTo(repairTarget);
-            				creepObj.repair(repairTarget);
-            				repairing = true;
-    			        }
-    			        
-    			    }
-    			    
-    			    if(!repairing){
-        			    //var sites = spawn.pos.findClosest(FIND_CONSTRUCTION_SITES);
-        			    //var sites = spawn.room.find(FIND_CONSTRUCTION_SITES);
-            			if(buildSites.length > 0){
-            			    creepObj.moveTo(buildSites[0]);
-            				var result = creepObj.build(buildSites[0]);
-            				if(result === -14){
-                                spawn.memory.notYet.push(buildSites[0].id);
-            				}
-            			}
-            			else{
-            			    
-            			    if(creepObj.pos.isNearTo(spawn.room.controller)){
-                				creepObj.upgradeController(spawn.room.controller);
-            			    }
-            			    else if(creepObj.memory.givingEnergy){
-            			        var closestCreep = Game.creeps[creepObj.memory.givingEnergy];
-                				creepObj.moveTo(closestCreep);
-                				creepObj.transferEnergy(closestCreep);
-                				if(creepObj.energy === 0){
-                				    creepObj.memory.givingEnergy = null;
-                				}
-            			    }
-            			    else{
-            			        //Look for empty space
-                			    var contPos = spawn.room.controller.pos;
-                			    var objs = spawn.room.lookAtArea(contPos.y-1, contPos.x-1, contPos.y+1, contPos.x+1);
-                			    var spaceCount = 9;
-                			    var creepsArea = [];
-                			    
-                			    for(var rows in objs){
-                			        for(var cols in objs[rows]){
-                			            for(var obj in objs[rows][cols]){
-                    			            if(objs[rows][cols][obj].type === "creep"){
-                    			                creepsArea.push(objs[rows][cols][obj].creep.name);
-                    			                spaceCount --;
-                    			            }
-                    			            if(objs[rows][cols][obj].type === "terrain" && objs[rows][cols][obj].terrain === "wall"){
-                    			                spaceCount --;
-                    			            }
-                			            }
-                			        }
-                			    }
-                			    
-                			    if(spaceCount === 0){
-                			        var closestCreep;
-                			        var energy = 9999999;
-                			        for(var creep in creepsArea){
-                			            if(Game.creeps[creepsArea[creep]].energy < energy){
-                			                closestCreep = Game.creeps[creepsArea[creep]];
-                			                energy = Game.creeps[creepsArea[creep]].energy;
-                			            }
-                			        }
-                    				creepObj.moveTo(closestCreep);
-                    				var res = creepObj.transferEnergy(closestCreep);
-                    				if(res === 0){
-                    				    creepObj.memory.givingEnergy = closestCreep.name;
-                    				}
-                			    }
-                			    else{
-                    				creepObj.moveTo(spawn.room.controller);
-                    				creepObj.upgradeController(spawn.room.controller);
-                			    }
-            			    }
-            			    
-            			}
-    			    }
-    			}
-    			else {
-    				creepObj.moveTo(spawn);
-                	creepObj.memory.givingEnergy = null;
-    				//IF NEEDED STORE ENERGY FOR CREATING NEW DEFENCE CREEPS
-    				if(currentState !== STATE_DEFENCE){
-    				    spawn.transferEnergy(creepObj);
-    				}
-    			}
-    
+    		if(creepObj.memory.job === Constants.CREEP_WORKER) {
+                Worker(spawn, creepObj, currentState, buildSites);
     		}
     		
 		}
