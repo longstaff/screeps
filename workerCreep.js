@@ -127,7 +127,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
 
         if(object.energyCapacity){
 
-            if(object.energy === object.energyCapacity || currentState === Constants.STATE_DEFENCE){
+            if(object.energy === 0 || currentState === Constants.STATE_DEFENCE){
                 creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
             }
             else{
