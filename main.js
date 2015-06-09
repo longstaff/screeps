@@ -159,7 +159,7 @@ if(expand){
     for(var roomId in roomtest){
         var curRoom = Game.rooms[roomtest[roomId]];
         var testFlags = curRoom.find(FIND_FLAGS);
-        var allowed = true;
+        var allowed = curRoom.controller;
 
         for(var flag in testFlags){
             if(!allowed || built){
@@ -169,6 +169,7 @@ if(expand){
             var pos = testFlags[flag].pos;
             for(var i = 0; i< 10; i++){
                 var test = curRoom.createConstructionSite(pos.x, pos.y+i, STRUCTURE_SPAWN);
+
                 //TODO: Add the memory from the flag somehow
                 if(test == OK){
                     built = true;
@@ -199,6 +200,7 @@ if(expand){
         }
         else{
             var nextRooms = [];
+            var needsScout = [];
             //Expand outside!
 
     		for(var roomId in roomtest){
@@ -218,7 +220,7 @@ if(expand){
                 			nextRooms.push(nextRoom);
                 		}
                 		else{
-                			makeScoutCreep(nextRoom);
+                			needsScout.push(nextRoom);
                 		}
                 	}
                 }
@@ -229,7 +231,7 @@ if(expand){
                 			nextRooms.push(nextRoom);
                 		}
                 		else{
-                			makeScoutCreep(nextRoom);
+                			needsScout.push(nextRoom);
                 		}
                 	}
 		        }
@@ -240,7 +242,7 @@ if(expand){
                 			nextRooms.push(nextRoom);
                 		}
                 		else{
-                			makeScoutCreep(nextRoom);
+                			needsScout.push(nextRoom);
                 		}
                 	}
 		        }
@@ -251,13 +253,14 @@ if(expand){
                 			nextRooms.push(nextRoom);
                 		}
                 		else{
-                			makeScoutCreep(nextRoom);
+                			needsScout.push(nextRoom);
                 		}
                 	}
 		        }
 
             }
 
+            var action = false;
             for(var roomid in nextRooms){
                 var room = Game.rooms[nextRooms[roomid]];
                 if(room.controler){
@@ -265,21 +268,27 @@ if(expand){
             		if(room.controler.owner.username !== "Galasquin"){
 			            //room.createFlag(room.controler.pos.x, room.controler.pos.y);
             		}
+                    action = true;
                 }
                 else{
                 	var mine = scanRoom(room);
 			        if(mine){
 			        	var randId;
 			        	do{
-			        		randId = "Flag"+Math.round(Math.random()*10000);
+			        		randId = "Flag"+Date.now();
 			        	}
 			        	while(Game.flags[randId]);
 
 			            mine.room.createFlag(mine.pos.x, mine.pos.y+4, randId);
 			            Game.flags[randId].memory.spawn = "Spawn1";
 
+                        action = true;
 			        }
                 }
+            }
+
+            if(!action && Memory.scouts.length === 0){
+                createScout();
             }
         }
     }
