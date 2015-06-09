@@ -16,7 +16,7 @@ module.exports = function (screepPrototype) {
             if(this.memory.moveLockId && (this.memory.moveLockId === object.name || this.memory.moveLockId === object.id)){
                 if(this.memory.moveLockRoom && this.memory.moveLockRoom === this.room.name && this.memory.moveLockWaypoint){
                     //No need to recalculate, just move
-                    console.log("Saving calculations!");
+                    //console.log("Saving calculations!");
                 }
                 else{
                     this.memory.moveLockRoom = this.room.name;
@@ -54,6 +54,7 @@ module.exports = function (screepPrototype) {
             if(this.memory.moveLockId && this.memory.moveLockId === room.name){
                 if(this.memory.moveLockRoom && this.memory.moveLockRoom === this.room.name && this.memory.moveLockWaypoint){
                     //No need to recalculate, just move
+                    //console.log("Saving calculations!");
                 }
                 else{
                     this.memory.moveLockRoom = this.room.name;
