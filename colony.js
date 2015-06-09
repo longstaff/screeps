@@ -25,13 +25,10 @@ module.exports = function (spawn) {
     if(!spawn.memory.extensions){
         spawn.memory.extensions = 0;
     }
-    if(!spawn.memory.extensions){
-        spawn.memory.extensions = 0;
-    }
     if(!spawn.memory.notYet){
         spawn.memory.notYet = [];
     }
-    
+
     var creeps = spawn.memory.screeps;
     var hasSpawned = spawn.memory.hasSpawned;
 
@@ -39,7 +36,7 @@ module.exports = function (spawn) {
     var offenceCreeps = 0;
     var workerCreeps = 0;
     var harvesterCreeps = 0;
-    
+
     var buildSites = [];
     var activeSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
     for(var sites in activeSites){
@@ -47,10 +44,10 @@ module.exports = function (spawn) {
             buildSites.push(activeSites[sites]);
         }
     }
-    
+
     for(var creep in creeps) {
         var creepObj = Game.creeps[creeps[creep]];
-        
+
         if(!CreepMaker.screepIsDead(spawn, creeps[creep], creepObj)){
             switch(creepObj.memory.job){
                 case Constants.CREEP_DEFENCE:
@@ -94,11 +91,11 @@ module.exports = function (spawn) {
                 spawn.memory.extensions = spawn.memory.extensions +1;
             }
         }
-        
+
         if(spawn.room.controller.level > 2 && spawn.memory.controlLevel !== spawn.room.controller.level){
             StructureMaker.createRoads(spawn);
         }
-        
+
         if(spawn.memory.controlLevel !== spawn.room.controller.level){
             spawn.memory.controlLevel = spawn.room.controller.level;
             spawn.memory.notYet = [];
@@ -110,7 +107,7 @@ module.exports = function (spawn) {
                 leftSites.push();
             }
         }
-        
+
         if(leftSites.length > 0){
             return true;
         }
@@ -118,7 +115,7 @@ module.exports = function (spawn) {
             return false;
         }
     }
-    
+
     //Create new creep
     if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 18){
         CreepMaker.createNextCreep(spawn, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps);
@@ -127,7 +124,7 @@ module.exports = function (spawn) {
     //Tell creeps to do something
     for(var creep in creeps) {
         var creepObj = Game.creeps[creeps[creep]];
-        
+
         if(!CreepMaker.screepIsDead(spawn, creeps[creep], creepObj)){
 
             if(creepObj.memory.job === Constants.CREEP_DEFENCE) {
@@ -136,15 +133,15 @@ module.exports = function (spawn) {
             if(creepObj.memory.job === Constants.CREEP_OFFENCE) {
                 Offence(spawn, spawn, creepObj, currentState, true);
             }
-    
+
             if(creepObj.memory.job === Constants.CREEP_HARVESTER) {
                 Harvest(spawn, spawn, creepObj);
             }
-            
+
             if(creepObj.memory.job === Constants.CREEP_WORKER) {
                 Worker(spawn, spawn, creepObj, currentState, buildSites);
             }
-            
+
         }
 
     }

@@ -1,3 +1,8 @@
+//Extend out the creeps
+var ExtendScreep = require('extendScreep');
+ExtendScreep(Creep.prototype);
+
+//Import objects
 var Colony = require('colony');
 var Outpost = require('outpost');
 var Constants = require('const');
@@ -34,7 +39,7 @@ var scanRoom = function(room){
     for(var possible in mines){
         var pos = mines[possible].pos;
         if(pos.findInRange(FIND_FLAGS, 10) == 0 && pos.findInRange(FIND_MY_SPAWNS, 10) == 0){
-            
+
             var struct = pos.findInRange(FIND_HOSTILE_STRUCTURES, 10);
             var spawnKeepers = false;
             for(var structure in struct){
@@ -139,7 +144,7 @@ function makeScoutCreep(room){
 if(expand){
     //Find a good spot
     var roomtest = [];
-    
+
     for(var colony in Game.spawns){
         roomtest.push(Game.spawns[colony].room.name);
     }
@@ -148,19 +153,19 @@ if(expand){
             roomtest.push(Game.flags[outpost].room.name);
         }
     }
-    
+
     var built = false;
-    
+
     for(var roomId in roomtest){
         var curRoom = Game.rooms[roomtest[roomId]];
         var testFlags = curRoom.find(FIND_FLAGS);
         var allowed = true;
-        
+
         for(var flag in testFlags){
             if(!allowed || built){
                 break;
             }
-            
+
             var pos = testFlags[flag].pos;
             for(var i = 0; i< 10; i++){
                 var test = curRoom.createConstructionSite(pos.x, pos.y+i, STRUCTURE_SPAWN);
@@ -176,26 +181,26 @@ if(expand){
             }
         }
     }
-    
-    
+
+
     if(!built){
 
         var mine;
-        
+
         for(var roomId in roomtest){
             if(!mine){
                 var room = Game.rooms[roomtest[roomId]];
     			mine = scanRoom(room);
             }
         }
-        
+
         if(mine){
             mine.room.createFlag(mine.pos.x, mine.pos.y+4);
         }
         else{
             var nextRooms = [];
             //Expand outside!
-            
+
     		for(var roomId in roomtest){
                 var room = Game.rooms[roomtest[roomId]];
 
@@ -275,7 +280,7 @@ if(expand){
 
 			        }
                 }
-            }            
+            }
         }
     }
 }
