@@ -120,7 +120,7 @@ module.exports = function (spawn) {
     }
     
     //Create new creep
-    if(currentState === Constants.CREEP_DEFENCE || creeps.length <= 18){
+    if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 18){
         CreepMaker.createNextCreep(spawn, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps);
     }
 

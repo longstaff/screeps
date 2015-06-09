@@ -50,8 +50,14 @@ module.exports = function (object, spawn, creepObj) {
             creepObj.moveTo(pointTo);
         }
         else{
-            creepObj.moveTo(target);
-            creepObj.transferEnergy(target);
+            if(target.energy === spawn.energyCapacity){
+                //Get out of the way for the workers
+                creepObj.moveTo(target.pos.x+3, target.pos.y);
+            }
+            else{
+                creepObj.moveTo(target);
+                creepObj.transferEnergy(target);
+            }
         }
     }
 }
