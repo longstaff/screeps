@@ -46,8 +46,15 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
         
         //If there is a target, fix it!
         if(repairTarget){
-            creepObj.moveTo(repairTarget);
-            creepObj.repair(repairTarget);
+            if(creepObj.room !== repairTarget.room){
+                var exit = creepObj.room.findExitTo(repairTarget.room);
+                var pointTo = creepObj.pos.findClosest(exit);
+                creepObj.moveTo(pointTo);
+            }
+            else{
+                creepObj.moveTo(repairTarget);
+                creepObj.repair(repairTarget);
+            }
             repairing = true;
         }
         
@@ -56,11 +63,19 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             //var sites = spawn.room.find(FIND_CONSTRUCTION_SITES);
             
             if(buildSites.length > 0){
-                creepObj.moveTo(buildSites[0]);
-                var result = creepObj.build(buildSites[0]);
-                if(result === -14){
-                    object.memory.notYet.push(buildSites[0].id);
+                if(creepObj.room !== buildSites[0].room){
+                    var exit = creepObj.room.findExitTo(buildSites[0].room);
+                    var pointTo = creepObj.pos.findClosest(exit);
+                    creepObj.moveTo(pointTo);
                 }
+                else{
+                    creepObj.moveTo(buildSites[0]);
+                    var result = creepObj.build(buildSites[0]);
+                    if(result === -14){
+                        object.memory.notYet.push(buildSites[0].id);
+                    }
+                }
+
             }
             else{
                 var controller = object.room.controller ? object.room.controller : spawn.room.controller;
@@ -69,11 +84,20 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 }
                 else if(creepObj.memory.givingEnergy){
                     var closestCreep = Game.creeps[creepObj.memory.givingEnergy];
-                    creepObj.moveTo(closestCreep);
-                    creepObj.transferEnergy(closestCreep);
-                    if(creepObj.energy === 0){
-                        creepObj.memory.givingEnergy = null;
+                    
+                    if(creepObj.room !== closestCreep.room){
+                        var exit = creepObj.room.findExitTo(closestCreep.room);
+                        var pointTo = creepObj.pos.findClosest(exit);
+                        creepObj.moveTo(pointTo);
                     }
+                    else{
+                        creepObj.moveTo(closestCreep);
+                        creepObj.transferEnergy(closestCreep);
+                        if(creepObj.energy === 0){
+                            creepObj.memory.givingEnergy = null;
+                        }
+                    }
+
                 }
                 else{
                     //Look for empty space
@@ -105,15 +129,31 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                                 energy = Game.creeps[creepsArea[creep]].energy;
                             }
                         }
-                        creepObj.moveTo(closestCreep);
-                        var res = creepObj.transferEnergy(closestCreep);
-                        if(res === 0){
-                            creepObj.memory.givingEnergy = closestCreep.name;
+
+                        if(creepObj.room !== closestCreep.room){
+                            var exit = creepObj.room.findExitTo(closestCreep.room);
+                            var pointTo = creepObj.pos.findClosest(exit);
+                            creepObj.moveTo(pointTo);
                         }
+                        else{
+                            creepObj.moveTo(closestCreep);
+                            var res = creepObj.transferEnergy(closestCreep);
+                            if(res === 0){
+                                creepObj.memory.givingEnergy = closestCreep.name;
+                            }
+                        }
+
                     }
                     else{
-                        creepObj.moveTo(controller);
-                        creepObj.upgradeController(controller);
+                        if(creepObj.room !== controller.room){
+                            var exit = creepObj.room.findExitTo(controller.room);
+                            var pointTo = creepObj.pos.findClosest(exit);
+                            creepObj.moveTo(pointTo);
+                        }
+                        else{
+                            creepObj.moveTo(controller);
+                            creepObj.upgradeController(controller);
+                        }
                     }
                 }
                 
@@ -124,16 +164,32 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
         creepObj.memory.givingEnergy = null;
             
         if(object.energyCapacity){
-            creepObj.moveTo(object);
-            if(currentState !== Constants.STATE_DEFENCE){
-                spawn.transferEnergy(creepObj);
+
+            if(creepObj.room !== object.room){
+                var exit = creepObj.room.findExitTo(object.room);
+                var pointTo = creepObj.pos.findClosest(exit);
+                creepObj.moveTo(pointTo);
+            }
+            else{
+                creepObj.moveTo(object);
+                if(currentState !== Constants.STATE_DEFENCE){
+                    spawn.transferEnergy(creepObj);
+                }
             }
         }
         else{
             //Take from mine instead
             var sources = object.pos.findInRange(FIND_SOURCES, 10);
-            creepObj.moveTo(sources[0]);
-            creepObj.harvest(sources[0]);
+
+            if(creepObj.room !== sources[0].room){
+                var exit = creepObj.room.findExitTo(sources[0].room);
+                var pointTo = creepObj.pos.findClosest(exit);
+                creepObj.moveTo(pointTo);
+            }
+            else{
+                creepObj.moveTo(sources[0]);
+                creepObj.harvest(sources[0]);
+            }
         }
     }
 }

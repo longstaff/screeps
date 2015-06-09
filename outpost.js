@@ -79,7 +79,7 @@ module.exports = function (flag) {
 		        flag.memory.checking = false;
 		    }
 		    
-		    if(offenceCreeps < 8 && !flag.memory.checking){
+		    if(offenceCreeps < 5 && !flag.memory.checking){
 		        flag.memory.state = Constants.STATE_AMASS;
 		    }
 		    else{
@@ -88,7 +88,7 @@ module.exports = function (flag) {
 		    }
 		}
 		else{
-		    if(defenceCreeps < 5 || harvesterCreeps < 5){
+		    if(defenceCreeps < 6 || harvesterCreeps < 5){
     		    flag.memory.state = Constants.STATE_DEFENCE;
     		}
     		else if(canExpand()){
@@ -158,8 +158,8 @@ module.exports = function (flag) {
     		}
     		if(creepObj.memory.job === Constants.CREEP_OFFENCE) {
                 if(Offence(flag, spawn, creepObj, currentState, true)){
-                    completeOffence ++;
-                };
+                    completeOffence = completeOffence+1;
+                }
     		}
     
     		if(creepObj.memory.job === Constants.CREEP_HARVESTER) {
