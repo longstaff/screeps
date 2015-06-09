@@ -126,11 +126,13 @@ var nextRoomName = function(room, direction){
 }
 
 function makeScoutCreep(room){
+	/*
 	var spawn = Game.spawns.Spawn1;
 	var creep = spawn.createCreep([MOVE, MOVE, MOVE, MOVE, MOVE], undefined, {targetRoom:room});
 	if(typeof(creep) === "string"){
 		Memory.scouts.push(creep);
 	}
+	*/
 }
 
 

@@ -27,13 +27,19 @@ function createNextCreep(memoryObj, spawn, state, offenceCreeps, defenceCreeps, 
 			}
 			break;
 		case Constants.STATE_EXPAND:
-			makeWorkerCreep(memoryObj, spawn);
+			if(memoryObj.room.controller){
+				makeWorkerCreep(memoryObj, spawn);
+			}
 			break;
 		case Constants.STATE_STORE:
-			makeWorkerCreep(memoryObj, spawn);
+			if(memoryObj.room.controller){
+				makeWorkerCreep(memoryObj, spawn);
+			}
 			break;
 	    case Constants.STATE_SPREAD:
-			makeWorkerCreep(memoryObj, spawn);
+	    	if(memoryObj.room.controller){
+				makeWorkerCreep(memoryObj, spawn);
+			}
 	        //makeOffenceCreep();
 	        break;
 	}
