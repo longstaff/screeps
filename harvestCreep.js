@@ -17,10 +17,15 @@ module.exports = function (object, spawn, creepObj) {
         //Test if a spawn or a flag
         if(!object.energyCapacity){ 
             var extensions = object.pos.findInRange(FIND_MY_STRUCTURES, 15);
-            for(var struct in extensions){
-                if(extensions[struct].structureType === STRUCTURE_EXTENSION && extensions[struct].energy < extensions[struct].energyCapacity){
-                    target = extensions[struct];
-                    break;
+            if(extensions.length === 0){
+                target = spawn;
+            }
+            else{
+                for(var struct in extensions){
+                    if(extensions[struct].structureType === STRUCTURE_EXTENSION && extensions[struct].energy < extensions[struct].energyCapacity){
+                        target = extensions[struct];
+                        break;
+                    }
                 }
             }
         }
