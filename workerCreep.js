@@ -11,14 +11,14 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     else if(creepObj.energy === creepObj.energyCapacity){
         creepObj.memory.task = "store";
     }
-
+    
     if(creepObj.memory.task === "build" || creepObj.memory.task === "store") {
-
+        
         var repairing = false;
-
+            
         var currentStructure = creepObj.memory.repairingId;
         var repairTarget;
-
+        
         if(currentStructure){
             if(Game.structures[currentStructure] && Game.structures[currentStructure].hits < Game.structures[currentStructure].hitsMax){
                 //Stick with one until completely fixed
@@ -29,7 +29,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 creepObj.memory.repairingId = null;
             }
         }
-
+        
         //TODO: FIND ROADS!!!!
         if(!repairTarget){
             //If none locked on, scan to find a new one
@@ -43,18 +43,18 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 }
             }
         }
-
+        
         //If there is a target, fix it!
         if(repairTarget){
             creepObj.moveToRoomObject(repairTarget);
             creepObj.repair(repairTarget);
             repairing = true;
         }
-
+        
         if(!repairing){
-
+            
             if(buildSites.length > 0){
-
+                
                 creepObj.moveToRoomObject(buildSites[0]);
                 var result = creepObj.build(buildSites[0]);
                 if(result === -14){
@@ -68,12 +68,18 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 }
                 else if(creepObj.memory.givingEnergy){
                     var closestCreep = Game.creeps[creepObj.memory.givingEnergy];
-                    creepObj.moveToRoomObject(closestCreep);
-                    creepObj.transferEnergy(closestCreep);
-                    if(creepObj.energy === 0){
+                    if(closestCreep){
+                        creepObj.moveToRoomObject(closestCreep);
+                        creepObj.transferEnergy(closestCreep);
+                        if(creepObj.energy === 0){
+                            creepObj.memory.givingEnergy = null;
+                        }
+                    }
+                    else{
                         creepObj.memory.givingEnergy = null;
                     }
-
+                    
+                    
                 }
                 else{
                     //Look for empty space
@@ -81,7 +87,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                     var objs = controller.room.lookAtArea(contPos.y-1, contPos.x-1, contPos.y+1, contPos.x+1);
                     var spaceCount = 9;
                     var creepsArea = [];
-
+                    
                     for(var rows in objs){
                         for(var cols in objs[rows]){
                             for(var obj in objs[rows][cols]){
@@ -95,7 +101,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                             }
                         }
                     }
-
+                    
                     if(spaceCount === 0){
                         var closestCreep;
                         var energy = 9999999;
@@ -118,15 +124,15 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                         creepObj.upgradeController(controller);
                     }
                 }
-
+                
             }
         }
     }
     else {
         creepObj.memory.givingEnergy = null;
-
+            
         if(object.energyCapacity){
-
+            
             if(object.energy === 0 || currentState === Constants.STATE_DEFENCE){
                 creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
             }
@@ -136,7 +142,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                     object.transferEnergy(creepObj);
                 }
             }
-
+            
         }
         else{
             //Take from mine instead

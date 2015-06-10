@@ -1,8 +1,36 @@
+var Constants = require('const');
+
 module.exports = function (object, spawn, creepObj) {
     if(creepObj.energy < creepObj.energyCapacity) {
-        var sources = object.pos.findInRange(FIND_SOURCES, 10);
-        creepObj.moveToRoomObject(sources[0]);
-        creepObj.harvest(sources[0]);
+
+        var steal = false;
+        if(creepObj.energy === 0){
+            var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
+            if(creepsNear.length){
+                for(var creep in creepsNear){
+                    if(creepsNear[creep].memory.job === Constants.CREEP_HARVESTER && creepsNear[creep].energy === creepsNear[creep].energyCapacity){
+                        var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
+                        if(closest === creepObj){
+                            creepsNear[creep].transferEnergy(creepObj);
+                            steal = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+
+        if(!steal){
+            var sources = object.pos.findInRange(FIND_SOURCES, 10);
+            creepObj.moveToRoomObject(sources[0]);
+            creepObj.harvest(sources[0]);
+        }
+        else{
+            creepObj.moveToRoomObject(object);
+            creepObj.harvest(object);
+        }
+
     }
     else {
         var target = object;

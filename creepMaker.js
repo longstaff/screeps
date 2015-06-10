@@ -14,16 +14,16 @@ function createNextCreep(memoryObj, spawn, state, offenceCreeps, defenceCreeps, 
 	        //NO MANUFACTURE UNTIL CHECKED
 	        break;
 		case Constants.STATE_DEFENCE:
-			if(defenceCreeps == 0 || defenceCreeps < harvesterCreeps){
+			if(harvesterCreeps == 0 || harvesterCreeps < defenceCreeps){
+				makeHarvesterCreep(memoryObj, spawn);
+			}
+			else{
 				if(defenceCreeps%2 == 0){
 					makeDefenceRangeCreep(memoryObj, spawn);
 				}
 				else{
 					makeDefenceShortCreep(memoryObj, spawn);
 				}
-			}
-			else{
-				makeHarvesterCreep(memoryObj, spawn);
 			}
 			break;
 		case Constants.STATE_EXPAND:
@@ -70,13 +70,13 @@ function makeOffenceRangeCreep(memoryObj, spawn){
 	}
 }
 function makeHarvesterCreep(memoryObj, spawn){
-	var creep = spawn.createCreep([WORK, CARRY, MOVE], undefined, {job:Constants.CREEP_HARVESTER});
+	var creep = spawn.createCreep([WORK, CARRY, MOVE, MOVE], undefined, {job:Constants.CREEP_HARVESTER});
 	if(typeof(creep) === "string"){
 		memoryObj.memory.screeps.push(creep);
 	}
 }
 function makeWorkerCreep(memoryObj, spawn){
-	var creep = spawn.createCreep([WORK, WORK, CARRY, CARRY, MOVE], undefined, {job:Constants.CREEP_WORKER});
+	var creep = spawn.createCreep([WORK, CARRY, CARRY, MOVE], undefined, {job:Constants.CREEP_WORKER});
 	if(typeof(creep) === "string"){
 		memoryObj.memory.screeps.push(creep);
 	}
