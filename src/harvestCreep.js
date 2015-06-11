@@ -39,18 +39,22 @@ module.exports = function (object, spawn, creepObj) {
         var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
         if(creepsNear.length){
             for(var creep in creepsNear){
-                if(creepsNear[creep].memory.job === Constants.CREEP_HARVESTER && creepsNear[creep].energy > 0){
-                    var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
-                    if(closest === creepObj){
-                        creepsNear[creep].transferEnergy(creepObj);
-                        steal = true;
-                        if(creepObj.energy === creepObj.energyCapacity){
-                            break;
+                if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creep){
+                    if(creepsNear[creep].memory.job === Constants.CREEP_HARVESTER && creepsNear[creep].energy > 0){
+                        var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
+                        if(closest === creepObj){
+                            creepsNear[creep].transferEnergy(creepObj);
+                            creepNear[creep].memory.stolenBy = creepObj.name;
+                            steal = true;
+                            if(creepObj.energy === creepObj.energyCapacity){
+                                break;
+                            }
                         }
                     }
                 }
             }
         }
+        creepObj.memory.stolenBy = null;
         
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             var sources = object.pos.findInRange(FIND_SOURCES, 10);
@@ -70,7 +74,6 @@ module.exports = function (object, spawn, creepObj) {
     }
     else {
         
-
         if(target === spawn && target.energy === target.energyCapacity){
             creepObj.moveToRoomPosition(target.pos.x+3, target.pos.y, target.room);
         }
@@ -78,22 +81,5 @@ module.exports = function (object, spawn, creepObj) {
             creepObj.moveToRoomObject(target);
             creepObj.transferEnergy(target);
         }
-        /*
-        if(creepObj.room !== target.room){
-            var exit = creepObj.room.findExitTo(target.room);
-            var pointTo = creepObj.pos.findClosest(exit);
-            creepObj.moveTo(pointTo);
-        }
-        else{
-            if(target.energy === spawn.energyCapacity){
-                //Get out of the way for the workers
-                creepObj.moveTo(target.pos.x+3, target.pos.y);
-            }
-            else{
-                creepObj.moveTo(target);
-                creepObj.transferEnergy(target);
-            }
-        }
-        */
     }
 }

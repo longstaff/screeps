@@ -118,7 +118,14 @@ module.exports = function (spawn) {
 
     //Create new creep
     if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 18){
-        CreepMaker.createNextCreep(spawn, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps);
+        var extensionCount = 0;
+        var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
+            filter: function(i) {
+                return i.structureType === STRUCTURE_EXTENSION;
+            }
+        });
+        if(extensions) extensionCount = extensions.length;
+        CreepMaker.createNextCreep(spawn, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps, extensionCount);
     }
 
     //Tell creeps to do something

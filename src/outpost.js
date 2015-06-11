@@ -143,7 +143,14 @@ module.exports = function (flag) {
 
 	//Create new creep
 	if(creeps.length <= 18){
-        CreepMaker.createNextCreep(flag, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps);
+		var extensionCount = 0;
+        var extensions = flag.room.find(FIND_MY_STRUCTURES, {
+            filter: function(i) {
+                return i.structureType === STRUCTURE_EXTENSION;
+            }
+        });
+        if(extensions) extensionCount = extensions.length;
+        CreepMaker.createNextCreep(flag, spawn, currentState, offenceCreeps, defenceCreeps, harvesterCreeps, extensionCount);
 	}
 
     var completeOffence = 0;

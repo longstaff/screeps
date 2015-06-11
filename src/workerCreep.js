@@ -14,18 +14,22 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
     if(creepsNear.length){
         for(var creep in creepsNear){
-            if((creepsNear[creep].memory.job === Constants.CREEP_WORKER || creepsNear[creep].memory.job === Constants.CREEP_HARVESTER) && creepsNear[creep].energy > 0){
-                var closest = target.pos.findClosest([creepObj, creepsNear[creep]]);
-                if(closest === creepObj){
-                    creepsNear[creep].transferEnergy(creepObj);
-                    steal = true;
-                    if(creepObj.energy === creepObj.energyCapacity){
-                        break;
+            if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creep){
+                if((creepsNear[creep].memory.job === Constants.CREEP_WORKER || creepsNear[creep].memory.job === Constants.CREEP_HARVESTER) && creepsNear[creep].energy > 0){
+                    var closest = target.pos.findClosest([creepObj, creepsNear[creep]]);
+                    if(closest === creepObj){
+                        creepsNear[creep].transferEnergy(creepObj);
+                        creepNear[creep].memory.stolenBy = creepObj.name;
+                        steal = true;
+                        if(creepObj.energy === creepObj.energyCapacity){
+                            break;
+                        }
                     }
                 }
             }
         }
     }
+    creepObj.memory.stolenBy = null;
 
     if(creepObj.energy === 0){
         creepObj.memory.task = "recharge";
