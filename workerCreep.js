@@ -2,6 +2,31 @@ var Constants = require('const');
 
 module.exports = function (object, spawn, creepObj, currentState, buildSites) {
 
+    var target;
+    if(buildSites.length > 0){
+        target = buildSites[0];
+    }
+    else{
+        target = object.room.controller ? object.room.controller : spawn.room.controller;
+    }
+
+    var steal = false;
+    var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
+    if(creepsNear.length){
+        for(var creep in creepsNear){
+            if((creepsNear[creep].memory.job === Constants.CREEP_WORKER || creepsNear[creep].memory.job === Constants.CREEP_HARVESTER) && creepsNear[creep].energy > 0){
+                var closest = target.pos.findClosest([creepObj, creepsNear[creep]]);
+                if(closest === creepObj){
+                    creepsNear[creep].transferEnergy(creepObj);
+                    steal = true;
+                    if(creepObj.energy === creepObj.energyCapacity){
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     if(creepObj.energy === 0){
         creepObj.memory.task = "recharge";
     }
@@ -11,9 +36,9 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     else if(creepObj.energy === creepObj.energyCapacity){
         creepObj.memory.task = "store";
     }
-    
+
     if(creepObj.memory.task === "build" || creepObj.memory.task === "store") {
-        
+
         var repairing = false;
             
         var currentStructure = creepObj.memory.repairingId;
@@ -30,6 +55,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
         }
         
+        /*
         //TODO: FIND ROADS!!!!
         if(!repairTarget){
             //If none locked on, scan to find a new one
@@ -50,11 +76,11 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             creepObj.repair(repairTarget);
             repairing = true;
         }
+        */
         
         if(!repairing){
-            
+
             if(buildSites.length > 0){
-                
                 creepObj.moveToRoomObject(buildSites[0]);
                 var result = creepObj.build(buildSites[0]);
                 if(result === -14){
@@ -63,9 +89,12 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
             else{
                 var controller = object.room.controller ? object.room.controller : spawn.room.controller;
-                if(creepObj.pos.isNearTo(controller)){
+                /*if(creepObj.pos.isNearTo(controller)){
                     creepObj.upgradeController(controller);
-                }
+                }*/
+                creepObj.moveToRoomObject(controller);
+                creepObj.upgradeController(controller);
+                /*
                 else if(creepObj.memory.givingEnergy){
                     var closestCreep = Game.creeps[creepObj.memory.givingEnergy];
                     if(closestCreep){
@@ -78,8 +107,6 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                     else{
                         creepObj.memory.givingEnergy = null;
                     }
-                    
-                    
                 }
                 else{
                     //Look for empty space
@@ -124,31 +151,46 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                         creepObj.upgradeController(controller);
                     }
                 }
+                */
                 
             }
         }
     }
     else {
         creepObj.memory.givingEnergy = null;
-            
-        if(object.energyCapacity){
-            
-            if(object.energy === 0 || currentState === Constants.STATE_DEFENCE){
-                creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
-            }
-            else{
-                creepObj.moveToRoomObject(object);
-                if(currentState !== Constants.STATE_DEFENCE){
-                    object.transferEnergy(creepObj);
+
+        if(!steal || creepObj.energy < creepObj.energyCapacity){
+            if(object.energyCapacity){
+                if(object.energy === 0 || currentState === Constants.STATE_DEFENCE){
+                    creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
+                }
+                else{
+                    creepObj.moveToRoomObject(object);
+                    if(currentState !== Constants.STATE_DEFENCE){
+                        object.transferEnergy(creepObj);
+                    }
                 }
             }
-            
+            else{
+                //Take from mine instead
+                var sources = object.pos.findInRange(FIND_SOURCES, 10);
+                creepObj.moveToRoomObject(sources[0]);
+                creepObj.harvest(sources[0]);
+            }
         }
         else{
-            //Take from mine instead
-            var sources = object.pos.findInRange(FIND_SOURCES, 10);
-            creepObj.moveToRoomObject(sources[0]);
-            creepObj.harvest(sources[0]);
+            if(buildSites.length > 0){
+                creepObj.moveToRoomObject(buildSites[0]);
+                var result = creepObj.build(buildSites[0]);
+                if(result === -14){
+                    object.memory.notYet.push(buildSites[0].id);
+                }
+            }
+            else{
+                var controller = object.room.controller ? object.room.controller : spawn.room.controller;
+                creepObj.moveToRoomObject(controller);
+            }
         }
+
     }
 }
