@@ -173,9 +173,14 @@ module.exports = function (flag) {
                 Harvest(flag, spawn, creepObj);
     		}
     		
-    		if(creepObj.memory.job === Constants.CREEP_WORKER) {
-                Worker(flag, spawn, creepObj, currentState, buildSites);
-    		}
+            if(creepObj.memory.job === Constants.CREEP_WORKER) {
+                if(currentState === Constants.STATE_DEFENCE){
+                    Harvest(flag, spawn, creepObj);
+                }
+                else{
+                    Worker(flag, spawn, creepObj, currentState, buildSites);
+                }
+            }
 		}
 	}
 	

@@ -40,7 +40,7 @@ module.exports = function (spawn) {
     var buildSites = [];
     var activeSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
     for(var sites in activeSites){
-        if(spawn.memory.notYet.indexOf(activeSites[sites].id)){
+        if(spawn.memory.notYet.indexOf(activeSites[sites].id) < 0){
             buildSites.push(activeSites[sites]);
         }
     }
@@ -95,20 +95,16 @@ module.exports = function (spawn) {
         if(spawn.room.controller.level > 2 && spawn.memory.controlLevel !== spawn.room.controller.level){
             StructureMaker.createRoads(spawn);
         }
+        if(spawn.room.controller.level > 2 && spawn.memory.controlLevel !== spawn.room.controller.level){
+            StructureMaker.createRoomDefenses(spawn.room);
+        }
 
         if(spawn.memory.controlLevel !== spawn.room.controller.level){
             spawn.memory.controlLevel = spawn.room.controller.level;
             spawn.memory.notYet = [];
         }
-        var leftSites = [];
-        var activeSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
-        for(var sites in activeSites){
-            if(spawn.memory.notYet.indexOf(activeSites[sites])){
-                leftSites.push();
-            }
-        }
 
-        if(leftSites.length > 0){
+        if(buildSites.length > 0){
             return true;
         }
         else{
@@ -146,7 +142,12 @@ module.exports = function (spawn) {
             }
 
             if(creepObj.memory.job === Constants.CREEP_WORKER) {
-                Worker(spawn, spawn, creepObj, currentState, buildSites);
+                if(currentState === Constants.STATE_DEFENCE){
+                    Harvest(spawn, spawn, creepObj);
+                }
+                else{
+                    Worker(spawn, spawn, creepObj, currentState, buildSites);
+                }
             }
 
         }

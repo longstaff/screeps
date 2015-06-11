@@ -19,8 +19,9 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                     var closest = target.pos.findClosest([creepObj, creepsNear[creep]]);
                     if(closest === creepObj){
                         creepsNear[creep].transferEnergy(creepObj);
-                        creepNear[creep].memory.stolenBy = creepObj.name;
+                        creepsNear[creep].memory.stolenBy = creepObj.name;
                         steal = true;
+                        creepObj.memory.stolenBy = null;
                         if(creepObj.energy === creepObj.energyCapacity){
                             break;
                         }
@@ -29,7 +30,6 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
         }
     }
-    creepObj.memory.stolenBy = null;
 
     if(creepObj.energy === 0){
         creepObj.memory.task = "recharge";
@@ -59,18 +59,36 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
         }
         
-        /*
         //TODO: FIND ROADS!!!!
         if(!repairTarget){
-            //If none locked on, scan to find a new one
-            var structures = object.room.find(FIND_MY_STRUCTURES);
-            for(var repair in structures){
-                if(structures[repair].hits < structures[repair].hitsMax/2){
-                    //Save ID and assign as current target
-                    creepObj.memory.repairingId = structures[repair].id;
-                    repairTarget = structures[repair];
-                    break;
+            var targets = [];
+            var ramparts = spawn.room.find(FIND_MY_STRUCTURES, {
+                filter: function(i) {
+                    return i.structureType === STRUCTURE_RAMPART;
                 }
+            });
+            for(var rampart in ramparts){
+                if(!ramparts[rampart].pos.isNearTo(spawn) && ramparts[rampart].hits < ramparts[rampart].hitsMax/2){
+                    targets.push(ramparts[rampart]);
+                }
+            }
+            var staticObjs = spawn.room.find(FIND_STRUCTURES, {
+                filter: function(i) {
+                    return i.structureType === STRUCTURE_ROAD || i.structureType === STRUCTURE_WALL;
+                }
+            });
+            for(var staticObj in staticObjs){
+                if(staticObjs[staticObj].hits < staticObjs[staticObj].hitsMax/2){
+                    targets.push(staticObjs[staticObj]);
+                }
+            }
+
+            //If none locked on, scan to find a new one
+            for(var repair in targets){
+                //Save ID and assign as current target
+                creepObj.memory.repairingId = targets[repair].id;
+                repairTarget = targets[repair];
+                break;
             }
         }
         
@@ -80,7 +98,6 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             creepObj.repair(repairTarget);
             repairing = true;
         }
-        */
         
         if(!repairing){
 
@@ -93,70 +110,8 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
             else{
                 var controller = object.room.controller ? object.room.controller : spawn.room.controller;
-                /*if(creepObj.pos.isNearTo(controller)){
-                    creepObj.upgradeController(controller);
-                }*/
                 creepObj.moveToRoomObject(controller);
-                creepObj.upgradeController(controller);
-                /*
-                else if(creepObj.memory.givingEnergy){
-                    var closestCreep = Game.creeps[creepObj.memory.givingEnergy];
-                    if(closestCreep){
-                        creepObj.moveToRoomObject(closestCreep);
-                        creepObj.transferEnergy(closestCreep);
-                        if(creepObj.energy === 0){
-                            creepObj.memory.givingEnergy = null;
-                        }
-                    }
-                    else{
-                        creepObj.memory.givingEnergy = null;
-                    }
-                }
-                else{
-                    //Look for empty space
-                    var contPos = controller.pos;
-                    var objs = controller.room.lookAtArea(contPos.y-1, contPos.x-1, contPos.y+1, contPos.x+1);
-                    var spaceCount = 9;
-                    var creepsArea = [];
-                    
-                    for(var rows in objs){
-                        for(var cols in objs[rows]){
-                            for(var obj in objs[rows][cols]){
-                                if(objs[rows][cols][obj].type === "creep"){
-                                    creepsArea.push(objs[rows][cols][obj].creep.name);
-                                    spaceCount --;
-                                }
-                                if(objs[rows][cols][obj].type === "terrain" && objs[rows][cols][obj].terrain === "wall"){
-                                    spaceCount --;
-                                }
-                            }
-                        }
-                    }
-                    
-                    if(spaceCount === 0){
-                        var closestCreep;
-                        var energy = 9999999;
-                        for(var creep in creepsArea){
-                            if(Game.creeps[creepsArea[creep]].energy < energy){
-                                closestCreep = Game.creeps[creepsArea[creep]];
-                                energy = Game.creeps[creepsArea[creep]].energy;
-                            }
-                        }
-
-                        creepObj.moveToRoomObject(closestCreep);
-                        var res = creepObj.transferEnergy(closestCreep);
-                        if(res === 0){
-                            creepObj.memory.givingEnergy = closestCreep.name;
-                        }
-
-                    }
-                    else{
-                        creepObj.moveToRoomObject(controller);
-                        creepObj.upgradeController(controller);
-                    }
-                }
-                */
-                
+                creepObj.upgradeController(controller);                
             }
         }
     }

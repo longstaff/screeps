@@ -44,7 +44,9 @@ module.exports = function (object, spawn, creepObj) {
                         var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
                         if(closest === creepObj){
                             creepsNear[creep].transferEnergy(creepObj);
-                            creepNear[creep].memory.stolenBy = creepObj.name;
+                            creepsNear[creep].memory.stolenBy = creepObj.name;
+                            creepsNear[creep].cancelOrder("moveToRoomObject");
+                            creepsNear[creep].cancelOrder("moveToRoomPosition");
                             steal = true;
                             if(creepObj.energy === creepObj.energyCapacity){
                                 break;
@@ -54,7 +56,9 @@ module.exports = function (object, spawn, creepObj) {
                 }
             }
         }
-        creepObj.memory.stolenBy = null;
+        else{
+            creepObj.memory.stolenBy = null;
+        }
         
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             var sources = object.pos.findInRange(FIND_SOURCES, 10);
