@@ -44,11 +44,21 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     if(creepObj.memory.task === "build" || creepObj.memory.task === "store") {
 
         var repairing = false;
-            
+        var building = false;
+
         var currentStructure = creepObj.memory.repairingId;
         var repairTarget;
-        
-        if(currentStructure){
+
+        if(buildSites.length > 0){
+            creepObj.moveToRoomObject(buildSites[0]);
+            var result = creepObj.build(buildSites[0]);
+            if(result === -14){
+                object.memory.notYet.push(buildSites[0].id);
+            }
+            building = true;
+        }
+
+        if(!building && currentStructure){
             if(Game.structures[currentStructure] && Game.structures[currentStructure].hits < Game.structures[currentStructure].hitsMax){
                 //Stick with one until completely fixed
                 repairTarget = Game.structures[currentStructure];
@@ -58,9 +68,8 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 creepObj.memory.repairingId = null;
             }
         }
-        
-        //TODO: FIND ROADS!!!!
-        if(!repairTarget){
+
+        if(!building && !repairTarget){
             var targets = [];
             var ramparts = spawn.room.find(FIND_MY_STRUCTURES, {
                 filter: function(i) {
@@ -91,28 +100,20 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 break;
             }
         }
-        
+
         //If there is a target, fix it!
         if(repairTarget){
             creepObj.moveToRoomObject(repairTarget);
             creepObj.repair(repairTarget);
             repairing = true;
         }
-        
-        if(!repairing){
 
-            if(buildSites.length > 0){
-                creepObj.moveToRoomObject(buildSites[0]);
-                var result = creepObj.build(buildSites[0]);
-                if(result === -14){
-                    object.memory.notYet.push(buildSites[0].id);
-                }
-            }
-            else{
-                var controller = object.room.controller ? object.room.controller : spawn.room.controller;
-                creepObj.moveToRoomObject(controller);
-                creepObj.upgradeController(controller);                
-            }
+        if(!building && !repairing){
+
+            var controller = object.room.controller ? object.room.controller : spawn.room.controller;
+            creepObj.moveToRoomObject(controller);
+            creepObj.upgradeController(controller);
+
         }
     }
     else {
