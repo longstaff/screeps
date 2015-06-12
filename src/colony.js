@@ -88,7 +88,7 @@ module.exports = function (spawn) {
 
     function setState(){
         //TODO: set states
-        if(harvesterCreeps + harvesterCarryCreeps + harvesterMinerCreeps < 8){
+        if(harvesterCreeps + harvesterCarryCreeps + harvesterMinerCreeps < 6){
             spawn.memory.state = Constants.STATE_HARVEST;
         }
         else if(defenceCreeps < 5){
