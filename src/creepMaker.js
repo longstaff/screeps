@@ -13,17 +13,26 @@ function createNextCreep(memoryObj, spawn, state, offenceCreeps, defenceCreeps, 
 	    case Constants.STATE_CHECK:
 	        //NO MANUFACTURE UNTIL CHECKED
 	        break;
-		case Constants.STATE_DEFENCE:
-			if(harvesterCreeps == 0 || harvesterCreeps < defenceCreeps){
+		case Constants.STATE_HARVEST:
+			if(harvesterCreeps < 2){
+				//Generic ones to start you off
 				makeHarvesterCreep(memoryObj, spawn, extensionCount);
 			}
+			else if(harvesterCreeps < 4){
+				//A couple of miners
+				makeHarvesterMinerCreep(memoryObj, spawn, extensionCount);
+			}
 			else{
-				if(defenceCreeps%2 == 0){
-					makeDefenceRangeCreep(memoryObj, spawn, extensionCount);
-				}
-				else{
-					makeDefenceShortCreep(memoryObj, spawn, extensionCount);
-				}
+				//The rest are carrying energy
+				makeHarvesterCarryCreep(memoryObj, spawn, extensionCount);
+			}
+			break;
+		case Constants.STATE_DEFENCE:
+			if(defenceCreeps%2 == 0){
+				makeDefenceRangeCreep(memoryObj, spawn, extensionCount);
+			}
+			else{
+				makeDefenceShortCreep(memoryObj, spawn, extensionCount);
 			}
 			break;
 		case Constants.STATE_EXPAND:
@@ -106,6 +115,38 @@ function makeHarvesterCreep(memoryObj, spawn, extensionCount){
 		memoryObj.memory.screeps.push(creep);
 	}
 }
+function makeHarvesterMinerCreep(memoryObj, spawn, extensionCount){
+	var array = [WORK, WORK, CARRY, MOVE];
+	if(extensionCount > 15){
+		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
+	}
+	if(extensionCount > 9){
+		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
+	}
+	if(extensionCount > 4){
+		array = [WORK, WORK, WORK, CARRY, MOVE];
+	}
+	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_HARVESTER_MINER});
+	if(typeof(creep) === "string"){
+		memoryObj.memory.screeps.push(creep);
+	}
+}
+function makeHarvesterCarryCreep(memoryObj, spawn, extensionCount){
+	var array = [CARRY, CARRY, CARRY, MOVE, MOVE];
+	if(extensionCount > 15){
+		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
+	}
+	if(extensionCount > 9){
+		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+	}
+	if(extensionCount > 4){
+		array = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+	}
+	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_HARVESTER_CARRY});
+	if(typeof(creep) === "string"){
+		memoryObj.memory.screeps.push(creep);
+	}
+}
 function makeWorkerCreep(memoryObj, spawn, extensionCount){
 	var array = [WORK, CARRY, CARRY, MOVE, MOVE];
 	if(extensionCount > 15){
@@ -118,6 +159,38 @@ function makeWorkerCreep(memoryObj, spawn, extensionCount){
 		array = [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
 	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER});
+	if(typeof(creep) === "string"){
+		memoryObj.memory.screeps.push(creep);
+	}
+}
+function makeWorkerMinerCreep(memoryObj, spawn, extensionCount){
+	var array = [WORK, WORK, CARRY, MOVE];
+	if(extensionCount > 15){
+		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
+	}
+	if(extensionCount > 9){
+		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
+	}
+	if(extensionCount > 4){
+		array = [WORK, WORK, WORK, CARRY, MOVE];
+	}
+	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER_MINER});
+	if(typeof(creep) === "string"){
+		memoryObj.memory.screeps.push(creep);
+	}
+}
+function makeWorkerCarryCreep(memoryObj, spawn, extensionCount){
+	var array = [CARRY, CARRY, CARRY, MOVE, MOVE];
+	if(extensionCount > 15){
+		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
+	}
+	if(extensionCount > 9){
+		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
+	}
+	if(extensionCount > 4){
+		array = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
+	}
+	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER_CARRY});
 	if(typeof(creep) === "string"){
 		memoryObj.memory.screeps.push(creep);
 	}
@@ -146,6 +219,16 @@ function screepIsDead(memoryObj, name, obj){
 }
 
 module.exports = {
+    createNextCreep:createNextCreep,
     screepIsDead:screepIsDead,
-    createNextCreep:createNextCreep
+    makeDefenceShortCreep:makeDefenceShortCreep,
+    makeDefenceRangeCreep:makeDefenceRangeCreep,
+    makeOffenceShortCreep:makeOffenceShortCreep,
+    makeOffenceRangeCreep:makeOffenceRangeCreep,
+    makeHarvesterCreep:makeHarvesterCreep,
+    makeHarvesterMinerCreep:makeHarvesterMinerCreep,
+    makeHarvesterCarryCreep:makeHarvesterCarryCreep,
+    makeWorkerCreep:makeWorkerCreep,
+    makeWorkerMinerCreep:makeWorkerMinerCreep,
+    makeWorkerCarryCreep:makeWorkerCarryCreep
 }

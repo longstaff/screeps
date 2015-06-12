@@ -57,7 +57,7 @@ function createNewExtension(spawn){
         }
     }
         
-    if(construct != -7 && construct != -10){
+    if(construct === OK){
         return true;
     }
     else{
