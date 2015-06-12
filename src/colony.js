@@ -210,7 +210,7 @@ module.exports = function (spawn) {
             if(creepObj.memory.job === Constants.CREEP_WORKER ||
                 creepObj.memory.job === Constants.CREEP_WORKER_MINER ||
                 creepObj.memory.job === Constants.CREEP_WORKER_CARRY) {
-                if((currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST) && harvesterCreeps + harvesterMinerCreeps < 2){
+                if((currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST) && harvesterCreeps + harvesterCarryCreeps < 2){
                     Harvest(spawn, spawn, creepObj);
                 }
                 else{
