@@ -39,7 +39,7 @@ module.exports = function (object, spawn, creepObj) {
         var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
         if(creepsNear.length){
             for(var creep in creepsNear){
-                if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creep){
+                if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creepsNear[creep].name){
                     if(creepsNear[creep].memory.job === Constants.CREEP_HARVESTER && creepsNear[creep].energy > 0){
                         var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
                         if(closest === creepObj){
