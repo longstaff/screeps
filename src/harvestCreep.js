@@ -41,14 +41,14 @@ module.exports = function (object, spawn, creepObj) {
             if(creepsNear.length){
                 for(var creep in creepsNear){
                     if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creepsNear[creep].name){
-                        
-                        if((creepsNear[creep].memory.job === Constants.CREEP_HARVESTER || 
+
+                        if((creepsNear[creep].memory.job === Constants.CREEP_HARVESTER ||
                             creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_MINER ||
                             creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_CARRY
                             ) && creepsNear[creep].energy > 0){
 
                             var closest = object.pos.findClosest([creepObj, creepsNear[creep]]);
-                            if(closest === creepObj){
+                            if(closest === creepObj || (creepObj.memory.job === Constants.CREEP_HARVESTER_CARRY && creepsNear[creep].memory.job !== Constants.CREEP_HARVESTER_CARRY) ){
                                 creepsNear[creep].transferEnergy(creepObj);
                                 creepsNear[creep].memory.stolenBy = creepObj.name;
                                 creepsNear[creep].cancelOrder("moveToRoomObject");
@@ -66,13 +66,17 @@ module.exports = function (object, spawn, creepObj) {
                 creepObj.memory.stolenBy = null;
             }
         }
-        
-        
+
+
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             if(creepObj.memory.job === Constants.CREEP_HARVESTER_CARRY){
                 //If a carryer, find the closest miner to steal from.
                 var sources = object.pos.findInRange(FIND_SOURCES, 10);
-                var closest = sources[0].pos.findClosest(FIND_MY_CREEPS);
+                var closest = sources[0].pos.findClosest(FIND_MY_CREEPS, {
+                    filter:function(i){
+                        return (i.memory.job === Constants.CREEP_HARVESTER_MINER || i.memory.job === Constants.CREEP_HARVESTER);
+                    }
+                });
                 if(creepObj !== closest){
                     creepObj.moveToRoomObject(closest);
                     closest.transferEnergy(creepObj);

@@ -11,15 +11,21 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     }
 
     var steal = false;
-    if(creepObj.memory.job !== Constants.CREEP_WORKER_MINER){
-        //If you are a miner, dont steal
+    if(creepObj.memory.job !== Constants.CREEP_WORKER_CARRY){
+        //If you are a carryer, dont steal
         var creepsNear = creepObj.pos.findInRange(FIND_MY_CREEPS, 1);
         if(creepsNear.length){
             for(var creep in creepsNear){
                 if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creepsNear[creep].name){
-                    if((creepsNear[creep].memory.job === Constants.CREEP_WORKER || creepsNear[creep].memory.job === Constants.CREEP_HARVESTER) && creepsNear[creep].energy > 0){
+                    if((
+                        creepsNear[creep].memory.job === Constants.CREEP_HARVESTER ||
+                        creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_CARRY ||
+                        creepsNear[creep].memory.job === Constants.CREEP_WORKER ||
+                        creepsNear[creep].memory.job === Constants.CREEP_WORKER_CARRY
+                    ) && creepsNear[creep].energy > 0){
                         var closest = target.pos.findClosest([creepObj, creepsNear[creep]]);
-                        if(closest === creepObj){
+                        //Always take from a carryer
+                        if(closest === creepObj || creepsNear[creep].memory.job === Constants.CREEP_WORKER_CARRY){
                             creepsNear[creep].transferEnergy(creepObj);
                             creepsNear[creep].memory.stolenBy = creepObj.name;
                             steal = true;
@@ -53,12 +59,13 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                     return (i.memory.job === Constants.CREEP_WORKER_MINER || i.memory.job === Constants.CREEP_WORKER) && i.energy < i.energyCapacity;
                 }
             });
-            var closest = creepObj.pos.findClosest(sources);
-            if(creepObj !== closest){
-                creepObj.moveToRoomObject(closest);
-                closest.transferEnergy(creepObj);
+            if(sources.length){
+                creepObj.moveToRoomObject(sources[0]);
+                creepObj.transferEnergy(sources[0]);
             }
-            creepObj.moveToRoomObject(target);
+            else{
+                creepObj.moveToRoomObject(target);
+            }
         }
         else{
             var repairing = false;
@@ -135,19 +142,19 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
         }
 
-        
+
     }
     else {
         creepObj.memory.givingEnergy = null;
 
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             if(object.energyCapacity){
-                if(object.energy === 0 || currentState === Constants.STATE_DEFENCE){
+                if(object.energy === 0 || (currentState === Constants.STATE_DEFENCE && currentState === Constants.STATE_HARVEST)){
                     creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
                 }
                 else{
                     creepObj.moveToRoomObject(object);
-                    if(currentState !== Constants.STATE_DEFENCE){
+                    if(currentState !== Constants.STATE_DEFENCE && currentState !== Constants.STATE_HARVEST){
                         object.transferEnergy(creepObj);
                     }
                 }
