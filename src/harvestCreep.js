@@ -51,8 +51,7 @@ module.exports = function (object, spawn, creepObj) {
                             if(closest === creepObj || (creepObj.memory.job === Constants.CREEP_HARVESTER_CARRY && creepsNear[creep].memory.job !== Constants.CREEP_HARVESTER_CARRY) ){
                                 creepsNear[creep].transferEnergy(creepObj);
                                 creepsNear[creep].memory.stolenBy = creepObj.name;
-                                creepsNear[creep].cancelOrder("moveToRoomObject");
-                                creepsNear[creep].cancelOrder("moveToRoomPosition");
+                                creepsNear[creep].cancelOrder("moveTo");
                                 steal = true;
                                 if(creepObj.energy === creepObj.energyCapacity){
                                     break;

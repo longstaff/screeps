@@ -61,10 +61,13 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             });
             if(sources.length){
                 creepObj.moveToRoomObject(sources[0]);
-                creepObj.transferEnergy(sources[0]);
+                for(var source in sources){
+                    creepObj.transferEnergy(sources[source]);
+                }
             }
             else{
-                creepObj.moveToRoomObject(target);
+                //console.log("moving to default")
+                creepObj.moveToRoomPosition(target.pos.x, target.pos.y-3, target.room);
             }
         }
         else{
