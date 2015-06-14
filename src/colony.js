@@ -150,12 +150,14 @@ module.exports = function (spawn) {
     //Create new creep
     if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 13){
         var extensionCount = 0;
-        var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
-            filter: function(i) {
-                return i.structureType === STRUCTURE_EXTENSION;
-            }
-        });
-        if(extensions) extensionCount = extensions.length;
+        if((harvesterCreeps == 0 && harvesterMinerCreeps > 1 || harvesterCreeps > 1)){
+            var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
+                filter: function(i) {
+                    return i.structureType === STRUCTURE_EXTENSION;
+                }
+            });
+            if(extensions) extensionCount = extensions.length;
+        }
 
         switch(currentState){
             case Constants.STATE_HARVEST:
