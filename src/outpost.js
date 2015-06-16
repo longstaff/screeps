@@ -58,7 +58,7 @@ module.exports = function (flag) {
 
 	for(var creep in creeps) {
         var creepObj = Game.creeps[creeps[creep]];
-        if(creepObj && !CreepMaker.screepIsDead(flag, spawn, creeps[creep], creepObj)){
+        if(creepObj && !CreepMaker.screepIsDead(flag, creeps[creep], creepObj)){
 
             switch(creepObj.memory.job){
                 case Constants.CREEP_DEFENCE:

@@ -91,6 +91,9 @@ module.exports = function (object, spawn, creepObj) {
                         creepObj.moveToRoomObject(most);
                         most.transferEnergy(creepObj);
                     }
+                    else{
+                        creepObj.moveToRoomPosition(target.pos.x, target.pos.y+2, target.room);
+                    }
                 }
                 else{
                     creepObj.moveToRoomPosition(target.pos.x, target.pos.y+2, target.room);
