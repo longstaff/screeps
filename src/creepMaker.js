@@ -99,6 +99,12 @@ function makeOffenceRangeCreep(memoryObj, spawn, extensionCount){
 		memoryObj.memory.screeps.push(creep);
 	}
 }
+function makeOffenceHealCreep(memoryObj, spawn, extensionCount){
+	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, HEAL], undefined, {job:Constants.CREEP_OFFENCE_HEAL});
+	if(typeof(creep) === "string"){
+		memoryObj.memory.screeps.push(creep);
+	}
+}
 function makeHarvesterCreep(memoryObj, spawn, extensionCount){
 	var array = [WORK, CARRY, MOVE, MOVE];
 	if(extensionCount > 15){
@@ -214,7 +220,7 @@ function screepIsDead(memoryObj, name, obj){
             memoryObj.memory.hasSpawned.push(name);
         }
     }
-    
+
     return false;
 }
 
@@ -223,6 +229,7 @@ module.exports = {
     screepIsDead:screepIsDead,
     makeDefenceShortCreep:makeDefenceShortCreep,
     makeDefenceRangeCreep:makeDefenceRangeCreep,
+	makeOffenceHealCreep:makeOffenceHealCreep,
     makeOffenceShortCreep:makeOffenceShortCreep,
     makeOffenceRangeCreep:makeOffenceRangeCreep,
     makeHarvesterCreep:makeHarvesterCreep,

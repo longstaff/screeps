@@ -44,6 +44,7 @@ module.exports = function (flag) {
     var harvesterCreeps = 0;
     var harvesterMinerCreeps = 0;
     var harvesterCarryCreeps = 0;
+    var totalCreeps = 0;
 
     var buildSites = [];
     var activeSites = flag.room.find(FIND_CONSTRUCTION_SITES);
@@ -60,27 +61,36 @@ module.exports = function (flag) {
             switch(creepObj.memory.job){
                 case Constants.CREEP_DEFENCE:
                     defenceCreeps ++;
+                    totalCreeps ++;
                     break;
+                case Constants.CREEP_OFFENCE_HEAL:
                 case Constants.CREEP_OFFENCE:
                     offenceCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER:
                     workerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER_MINER:
                     workerMinerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER_CARRY:
                     workerCarryCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER:
                     harvesterCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER_MINER:
                     harvesterMinerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER_CARRY:
                     harvesterCarryCreeps ++;
+                    totalCreeps ++;
                     break;
             }
 		}
@@ -162,7 +172,7 @@ module.exports = function (flag) {
 
 
     //Create new creep
-    if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 18){
+    if(currentState === Constants.CREEP_DEFENCE || totalCreeps <= 18){
         var extensionCount = 0;
         var extensions = flag.room.find(FIND_MY_STRUCTURES, {
             filter: function(i) {
@@ -172,6 +182,17 @@ module.exports = function (flag) {
         if(extensions) extensionCount = extensions.length;
 
         switch(currentState){
+            case Constants.STATE_AMASS:
+                if(offenceCreeps == 0){
+                    CreepMaker.makeOffenceHealCreep(flag, spawn, extensionCount);
+                }
+                else if(offenceCreeps%2 == 0){
+                    CreepMaker.makeOffenceRangeCreep(flag, spawn, extensionCount);
+                }
+                else{
+                    CreepMaker.makeOffenceShortCreep(flag, spawn, extensionCount);
+                }
+                break;
             case Constants.STATE_HARVEST:
                 if(extensionCount === 0 && harvesterCreeps < 2){
                     //Generic ones to start you off
