@@ -6,7 +6,7 @@ module.exports = function (object, spawn, creepObj, state, claimedRoom) {
 
         var targets = object.pos.findInRange(FIND_HOSTILE_CREEPS, 15);
         if(targets && targets.length) {
-		    creepObj.moveToRoomObject(targets[0]);
+            creepObj.moveToRoomObject(targets[0]);
             if(creepObj.getActiveBodyparts(RANGED_ATTACK) > 0){
                 creepObj.rangedAttack(targets[0]);
             }
@@ -17,7 +17,7 @@ module.exports = function (object, spawn, creepObj, state, claimedRoom) {
         }
         else{
             var pos = object.pos;
-		    creepObj.moveToRoomPosition(pos.x, pos.y + 5, object.room);
+            creepObj.moveToRoomPosition(pos.x, pos.y + 3, object.room);
             if(object.pos.findInRange([creepObj], 5).length > 0){
                 return true;
             }
@@ -29,8 +29,8 @@ module.exports = function (object, spawn, creepObj, state, claimedRoom) {
     }
     else{
         //GET OUT THE WAY
-	    creepObj.moveToRoomPosition(spawn.pos.x, spawn.pos.y + 5, spawn.room);
-	    return false;
+        creepObj.moveToRoomPosition(spawn.pos.x, spawn.pos.y + 5, spawn.room);
+        return false;
     }
 
 }

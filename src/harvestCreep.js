@@ -3,24 +3,24 @@ var Constants = require('const');
 module.exports = function (object, spawn, creepObj) {
     var target = object;
     //Test if a spawn or a flag
+    
     if(!object.energyCapacity){
-        var extensions = object.pos.findInRange(FIND_MY_STRUCTURES, 15);
+        var extensions = object.pos.findInRange(FIND_MY_STRUCTURES, 15, {
+            filter:function(i){
+                return i.structureType === STRUCTURE_EXTENSION && i.energy < i.energyCapacity;
+            }
+        });
         if(extensions.length === 0){
             target = spawn;
         }
         else{
-            for(var struct in extensions){
-                if(extensions[struct].structureType === STRUCTURE_EXTENSION && extensions[struct].energy < extensions[struct].energyCapacity){
-                    target = extensions[struct];
-                    break;
-                }
-            }
+            target = extensions[0];
         }
     }
     else{
         target = spawn;
     }
-
+    
     if(target === spawn && spawn.energy === spawn.energyCapacity){
         var extensions = spawn.pos.findInRange(FIND_MY_STRUCTURES, 15);
         for(var struct in extensions){
@@ -41,8 +41,8 @@ module.exports = function (object, spawn, creepObj) {
             if(creepsNear.length){
                 for(var creep in creepsNear){
                     if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creepsNear[creep].name){
-
-                        if((creepsNear[creep].memory.job === Constants.CREEP_HARVESTER ||
+                        
+                        if((creepsNear[creep].memory.job === Constants.CREEP_HARVESTER || 
                             creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_MINER ||
                             creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_CARRY
                             ) && creepsNear[creep].energy > 0){
@@ -65,8 +65,8 @@ module.exports = function (object, spawn, creepObj) {
                 creepObj.memory.stolenBy = null;
             }
         }
-
-
+        
+        
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             if(creepObj.memory.job === Constants.CREEP_HARVESTER_CARRY){
                 //If a carryer, find the closest miner to steal from.
@@ -76,7 +76,7 @@ module.exports = function (object, spawn, creepObj) {
                         return (i.memory.job === Constants.CREEP_HARVESTER_MINER || i.memory.job === Constants.CREEP_HARVESTER);
                     }
                 });
-
+                
                 if(closest.length){
                     var most;
                     var mostEn = 0;
@@ -86,14 +86,16 @@ module.exports = function (object, spawn, creepObj) {
                             most = closest[close];
                         }
                     }
-
-                    creepObj.moveToRoomObject(most);
-                    most.transferEnergy(creepObj);
+                    
+                    if(most){
+                        creepObj.moveToRoomObject(most);
+                        most.transferEnergy(creepObj);
+                    }
                 }
                 else{
                     creepObj.moveToRoomPosition(target.pos.x, target.pos.y+2, target.room);
                 }
-
+                
             }
             else{
                 //Else harvest if you can.

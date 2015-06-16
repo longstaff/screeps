@@ -8,6 +8,8 @@ var CreepMaker = require('creepMaker');
 
 module.exports = function (flag) {
 
+    if(!flag.room) return;
+    
 	var currentState = flag.memory.state;
 	var spawn = flag.pos.findClosest(FIND_MY_SPAWNS);
 	if(!spawn){

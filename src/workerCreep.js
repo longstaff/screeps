@@ -163,10 +163,15 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
                 }
             }
             else{
-                //Take from mine instead
-                var sources = object.pos.findInRange(FIND_SOURCES, 10);
-                creepObj.moveToRoomObject(sources[0]);
-                creepObj.harvest(sources[0]);
+                if(spawn.energy === 0 || currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST){
+                    creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
+                }
+                else{
+                    creepObj.moveToRoomObject(spawn);
+                    if(currentState !== Constants.STATE_DEFENCE && currentState !== Constants.STATE_HARVEST){
+                        spawn.transferEnergy(creepObj);
+                    }
+                }
             }
         }
         else{

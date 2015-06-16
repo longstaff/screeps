@@ -6,11 +6,13 @@ module.exports = function (spawn, creepObj) {
         }
     });
     var borders = [];
+    /*
     for(var rampart in ramparts){
         if(!ramparts[rampart].pos.isNearTo(spawn)){
             borders.push(ramparts[rampart]);
         }
     }
+    */
 
     if(borders.length){
     	var targets = spawn.room.find(FIND_HOSTILE_CREEPS, {
@@ -28,7 +30,6 @@ module.exports = function (spawn, creepObj) {
 			        }
 			    })
 				creepObj.moveTo(closest);
-
 			    creepObj.rangedAttack(targets[0]);
 	        }
 	        if(creepObj.getActiveBodyparts(ATTACK) > 0){
@@ -41,7 +42,12 @@ module.exports = function (spawn, creepObj) {
 		}
     }
     else{
-	    var targets = spawn.pos.findInRange(FIND_HOSTILE_CREEPS, 15);
+        var targets = spawn.room.find(FIND_HOSTILE_CREEPS, {
+	        filter: function(i) {
+	            return i.owner.username !== "Source Keeper";
+	        }
+	    });
+	    
 		if(targets && targets.length) {
 			creepObj.moveTo(targets[0]);
 	        if(creepObj.getActiveBodyparts(RANGED_ATTACK) > 0){
