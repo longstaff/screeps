@@ -54,6 +54,7 @@ module.exports = function (spawn) {
     var harvesterCreeps = 0;
     var harvesterMinerCreeps = 0;
     var harvesterCarryCreeps = 0;
+    var totalCreeps = 0;
 
     var buildSites = [];
     var activeSites = spawn.room.find(FIND_CONSTRUCTION_SITES);
@@ -70,27 +71,35 @@ module.exports = function (spawn) {
             switch(creepObj.memory.job){
                 case Constants.CREEP_DEFENCE:
                     defenceCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_OFFENCE:
                     offenceCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER:
                     workerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER_MINER:
                     workerMinerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_WORKER_CARRY:
                     workerCarryCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER:
                     harvesterCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER_MINER:
                     harvesterMinerCreeps ++;
+                    totalCreeps ++;
                     break;
                 case Constants.CREEP_HARVESTER_CARRY:
                     harvesterCarryCreeps ++;
+                    totalCreeps ++;
                     break;
             }
         }
@@ -148,7 +157,7 @@ module.exports = function (spawn) {
     }
 
     //Create new creep
-    if(currentState === Constants.CREEP_DEFENCE || defenceCreeps + offenceCreeps + workerCreeps + harvesterCreeps <= 13){
+    if(currentState === Constants.CREEP_DEFENCE || totalCreeps <= 13){
         var extensionCount = 0;
         if((harvesterCreeps == 0 && harvesterMinerCreeps > 1 || harvesterCreeps > 1)){
             var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
@@ -161,11 +170,11 @@ module.exports = function (spawn) {
 
         switch(currentState){
             case Constants.STATE_HARVEST:
-                if(extensionCount === 0 && harvesterCreeps < 2){
+                if(extensionCount === 0 && harvesterCreeps < 1){
                     //Generic ones to start you off
                     CreepMaker.makeHarvesterCreep(spawn, spawn, extensionCount);
                 }
-                else if((extensionCount === 0 && harvesterMinerCreeps < 2) || (extensionCount > 0 && harvesterMinerCreeps < 4)){
+                else if((extensionCount === 0 && harvesterMinerCreeps < 2) || (extensionCount > 0 && harvesterMinerCreeps + harvesterMinerCreeps < 3)){
                     //A couple of miners
                     CreepMaker.makeHarvesterMinerCreep(spawn, spawn, extensionCount);
                 }
@@ -193,7 +202,7 @@ module.exports = function (spawn) {
                     //Generic ones to start you off
                     CreepMaker.makeWorkerCreep(spawn, spawn, extensionCount);
                 }
-                else if((extensionCount === 0 && workerMinerCreeps < 2) || (extensionCount > 0 && workerMinerCreeps < 4)){
+                else if((extensionCount === 0 && workerMinerCreeps < 2) || (extensionCount > 0 && workerMinerCreeps < 3)){
                     //A couple of miners
                     CreepMaker.makeWorkerMinerCreep(spawn, spawn, extensionCount);
                 }

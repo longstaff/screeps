@@ -1,16 +1,7 @@
 module.exports = function (screepPrototype) {
 
     screepPrototype.moveToRoomObject = function(object){
-
-        var calculateToPoint = function(creep, target){
-            var exit = creep.room.findExitTo(target.room);
-            var pointTo = creep.pos.findClosest(exit);
-
-            return {
-                x:pointTo.x,
-                y:pointTo.y
-            };
-        };
+        if(!this) return;
 
         if(object.room.name !== this.room.name){
             if(this.memory.moveLockId && (this.memory.moveLockId === object.name || this.memory.moveLockId === object.id)){
@@ -20,7 +11,7 @@ module.exports = function (screepPrototype) {
                 }
                 else{
                     this.memory.moveLockRoom = this.room.name;
-                    this.memory.moveLockWaypoint = calculateToPoint(this, object);
+                    this.memory.moveLockWaypoint = this.calculateToPoint(object);
                 }
             }
             else{
@@ -28,7 +19,7 @@ module.exports = function (screepPrototype) {
                 else this.memory.moveLockId = object.id;
 
                 this.memory.moveLockRoom === this.room.name
-                this.memory.moveLockWaypoint = calculateToPoint(this, object);
+                this.memory.moveLockWaypoint = this.calculateToPoint(object);
             }
             this.moveTo(this.memory.moveLockWaypoint.x, this.memory.moveLockWaypoint.y);
         }
@@ -39,16 +30,7 @@ module.exports = function (screepPrototype) {
     };
 
     screepPrototype.moveToRoomPosition = function(posx, posy, room){
-
-        var calculateToPoint = function(creep, room){
-            var exit = creep.room.findExitTo(room);
-            var pointTo = creep.pos.findClosest(exit);
-
-            return {
-                x:pointTo.x,
-                y:pointTo.y
-            };
-        };
+        if(!this) return;
 
         if(room.name !== this.room.name){
             if(this.memory.moveLockId && this.memory.moveLockId === room.name){
@@ -58,13 +40,13 @@ module.exports = function (screepPrototype) {
                 }
                 else{
                     this.memory.moveLockRoom = this.room.name;
-                    this.memory.moveLockWaypoint = calculateToPoint(this, room);
+                    this.memory.moveLockWaypoint = this.calculateToPoint(room);
                 }
             }
             else{
                 this.memory.moveLockId = room.name;
                 this.memory.moveLockRoom === this.room.name
-                this.memory.moveLockWaypoint = calculateToPoint(this, room);
+                this.memory.moveLockWaypoint = this.calculateToPoint(room);
             }
             this.moveTo(this.memory.moveLockWaypoint.x, this.memory.moveLockWaypoint.y);
         }
@@ -73,5 +55,45 @@ module.exports = function (screepPrototype) {
         }
 
     };
+    screepPrototype.calculateToPoint = function(room){
+        var exit = this.room.findExitTo(room);
+        var pointTo = this.pos.findClosest(exit);
+
+        return {
+            x:pointTo.x,
+            y:pointTo.y
+        };
+    };
+
+    screepPrototype.moveToTargetPosition = function(location){
+        if(!this) return;
+        if(!this.memory.loc) this.memory.loc = [];
+        if(!this.memory.loc[location]){
+            return false;
+        }
+        else{
+            var room = Game.rooms[this.memory.loc[location].room];
+            this.moveToRoomPosition(this.memory.loc[location].x, this.memory.loc[location].y, this.memory.loc[location].room);
+            return true;
+        }
+    }
+    screepPrototype.getTargetPosition = function(location){
+        if(!this) return;
+        if(!this.memory.loc) this.memory.loc = [];
+        return this.memory.loc[location];
+    }
+    screepPrototype.setTargetPosition = function(location, x, y, roomName){
+        if(!this) return;
+        this.memory.loc[location] = {
+            x:x,
+            y:y,
+            room:roomName
+        }
+    }
+    screepPrototype.clearTargetPosition = function(location){
+        if(!this) return;
+        if(!this.memory.loc) this.memory.loc = [];
+        this.memory.loc[location] = null;
+    }
 
 }
