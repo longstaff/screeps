@@ -111,7 +111,7 @@ module.exports = function (spawn) {
 
     function setState(){
         //TODO: set states
-        if(harvesterCreeps + harvesterCarryCreeps + harvesterMinerCreeps < 6){
+        if(harvesterCreeps + harvesterCarryCreeps + harvesterMinerCreeps < 5){
             spawn.memory.state = Constants.STATE_HARVEST;
         }
         else if(defenceCreeps < 5){
@@ -157,7 +157,7 @@ module.exports = function (spawn) {
     }
 
     //Create new creep
-    if(currentState === Constants.CREEP_DEFENCE || totalCreeps <= 13){
+    if(currentState === Constants.CREEP_DEFENCE || totalCreeps <= 16){
         var extensionCount = 0;
         if((harvesterCreeps == 0 && harvesterMinerCreeps > 1 || harvesterCreeps > 1)){
             var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
