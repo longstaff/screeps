@@ -52,7 +52,7 @@ function countCreeps(memoryObj){
     for(var creep in creeps) {
         var creepObj = Game.creeps[creeps[creep]];
 
-        if(!CreepMaker.screepIsDead(spawn, creeps[creep], creepObj)){
+        if(!CreepMaker.screepIsDead(memoryObj, creeps[creep], creepObj)){
             switch(creepObj.memory.job){
                 case Constants.CREEP_DEFENCE:
                     defenceCreeps ++;
@@ -92,7 +92,7 @@ function countCreeps(memoryObj){
 
     return {
         defenceCreeps:defenceCreeps,
-        offenceCreeps:offenceCreeps;
+        offenceCreeps:offenceCreeps,
         workerCreeps:workerCreeps,
         workerMinerCreeps:workerMinerCreeps,
         workerCarryCreeps:workerCarryCreeps,
@@ -116,115 +116,78 @@ function getBuildSites(memoryObj){
 }
 
 function setState(memoryObj, creepsCount){
-    //TODO: set states for both systems
-    if(creepsCount.harvesterCreeps + creepsCount.harvesterCarryCreeps + creepsCount.harvesterMinerCreeps < 6){
-        memoryObj.memory.state = Constants.STATE_HARVEST;
-    }
-    else if(creepsCount.defenceCreeps < 5){
-        memoryObj.memory.state = Constants.STATE_DEFENCE;
-    }
-    else if(canExpand(memoryObj)){
-        memoryObj.memory.state = Constants.STATE_EXPAND;
-    }
-    else if(memoryObj.room.controller && memoryObj.room.controller.level < 3){
-        memoryObj.memory.state = Constants.STATE_STORE;
+    //For flags only
+    if(memoryObj.energy === undefined && memoryObj.memory.checked !== true){
+        if(creepsCount.offenceCreeps === 0){
+            memoryObj.memory.checking = false;
+        }
+
+        if(creepsCount.offenceCreeps < 5 && !memoryObj.memory.checking){
+            memoryObj.memory.state = Constants.STATE_AMASS;
+        }
+        else{
+            memoryObj.memory.checking = true;
+            memoryObj.memory.state = Constants.STATE_CHECK;
+        }
     }
     else{
-        memoryObj.memory.state = Constants.STATE_SPREAD;
+        if(creepsCount.harvesterCreeps + creepsCount.harvesterCarryCreeps + creepsCount.harvesterMinerCreeps < 6){
+            memoryObj.memory.state = Constants.STATE_HARVEST;
+        }
+        else if(creepsCount.defenceCreeps < 5){
+            memoryObj.memory.state = Constants.STATE_DEFENCE;
+        }
+        else if(canExpand(memoryObj)){
+            memoryObj.memory.state = Constants.STATE_EXPAND;
+        }
+        else if(memoryObj.room.controller && memoryObj.room.controller.level < 3){
+            memoryObj.memory.state = Constants.STATE_STORE;
+        }
+        else{
+            memoryObj.memory.state = Constants.STATE_SPREAD;
+        }
     }
 }
 
 function canExpand(memoryObj){
-    var maxSpawns = Math.max(10, (memoryObj.room.controller.level - 1)*5);
+    if(memoryObj.room.controller){
+        var maxSpawns = Math.max(10, (memoryObj.room.controller.level - 1)*5);
 
-    if(memoryObj.room.controller.level > 1 && memoryObj.memory.extensions <= maxSpawns){
-        if(StructureMaker.createNewExtension(memoryObj)){
-            memoryObj.memory.extensions = memoryObj.memory.extensions +1;
+        if(memoryObj.room.controller.level > 1 && memoryObj.memory.extensions <= maxSpawns){
+            if(StructureMaker.createNewExtension(memoryObj)){
+                memoryObj.memory.extensions = memoryObj.memory.extensions +1;
+            }
+        }
+
+        if(memoryObj.room.controller.level > 2 && memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
+            StructureMaker.createRoads(memoryObj);
+        }
+        //Only build walls for spawns
+        /*
+        if(memoryObj.energy && memoryObj.room.controller.level > 3 && memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
+            StructureMaker.createRoomDefenses(memoryObj.room);
+        }
+        */
+
+        if(memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
+            memoryObj.memory.controlLevel = memoryObj.room.controller.level;
+            memoryObj.memory.notYet = [];
+        }
+
+        var buildSites = getBuildSites(memoryObj);
+        if(buildSites.length > 0){
+            return true;
+        }
+        else{
+            return false;
         }
     }
-
-    if(memoryObj.room.controller.level > 2 && memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
-        StructureMaker.createRoads(memoryObj);
-    }
-    if(memoryObj.room.controller.level > 2 && memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
-        StructureMaker.createRoomDefenses(memoryObj.room);
-    }
-
-    if(memoryObj.memory.controlLevel !== memoryObj.room.controller.level){
-        memoryObj.memory.controlLevel = memoryObj.room.controller.level;
-        memoryObj.memory.notYet = [];
-    }
-
-    var buildSites = getBuildSites(memoryObj);
-    if(buildSites.length > 0){
-        return true;
-    }
     else{
+        //No controller, cant build here.
         return false;
     }
 }
 
-function makeNewCreep(memoryObj, spawnObj, creepsCount){
-    var currentState = memoryObj.memory.state;
-
-    //Create new creep
-    if(currentState === Constants.CREEP_DEFENCE || creepsCount.total <= 13){
-        var extensionCount = 0;
-        if((creepsCount.harvesterCreeps == 0 && creepsCount.harvesterMinerCreeps > 1 || creepsCount.harvesterCreeps > 1)){
-            var extensions = spawn.room.find(FIND_MY_STRUCTURES, {
-                filter: function(i) {
-                    return i.structureType === STRUCTURE_EXTENSION;
-                }
-            });
-            if(extensions) extensionCount = extensions.length;
-        }
-
-        switch(currentState){
-            case Constants.STATE_HARVEST:
-                if(extensionCount === 0 && creepsCount.harvesterCreeps < 2){
-                    //Generic ones to start you off
-                    CreepMaker.makeHarvesterCreep(memoryObj, spawnObj, extensionCount);
-                }
-                else if((extensionCount === 0 && creepsCount.harvesterMinerCreeps < 2) || (extensionCount > 0 && creepsCount.harvesterMinerCreeps < 4)){
-                    //A couple of miners
-                    CreepMaker.makeHarvesterMinerCreep(memoryObj, spawnObj, extensionCount);
-                }
-                else{
-                    //The rest are carrying energy
-                    CreepMaker.makeHarvesterCarryCreep(memoryObj, spawnObj, extensionCount);
-                }
-                break;
-            case Constants.STATE_DEFENCE:
-                if(creepsCount.defenceCreeps % 2 == 0){
-                    CreepMaker.makeDefenceRangeCreep(memoryObj, spawnObj, extensionCount);
-                }
-                else{
-                    CreepMaker.makeDefenceShortCreep(memoryObj, spawnObj, extensionCount);
-                }
-                break;
-            case Constants.STATE_EXPAND:
-                if(spawn.room.controller){
-                    CreepMaker.makeWorkerCreep(memoryObj, spawnObj, extensionCount);
-                }
-                break;
-            case Constants.STATE_SPREAD:
-            case Constants.STATE_STORE:
-                if(extensionCount === 0 && creepsCount.workerCreeps < 2){
-                    //Generic ones to start you off
-                    CreepMaker.makeWorkerCreep(memoryObj, spawnObj, extensionCount);
-                }
-                else if((extensionCount === 0 && creepsCount.workerMinerCreeps < 2) || (extensionCount > 0 &&  creepsCount.workerMinerCreeps < 3)){
-                    //A couple of miners
-                    CreepMaker.makeWorkerMinerCreep(memoryObj, spawnObj, extensionCount);
-                }
-                else{
-                    //The rest are carrying energy
-                    CreepMaker.makeWorkerCarryCreep(memoryObj, spawnObj, extensionCount);
-                }
-                break;
-        }
-    }
-}
 
 function moveCreeps(memoryObj, spawnObj){
     var creeps = memoryObj.memory.screeps;
@@ -252,7 +215,7 @@ function moveCreeps(memoryObj, spawnObj){
 
             if(creepObj.memory.job === Constants.CREEP_WORKER ||
                 creepObj.memory.job === Constants.CREEP_WORKER_MINER) {
-                if((currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST) && harvesterCreeps + harvesterMinerCreeps < 3){
+                if((currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST) && creeps.harvesterCreeps + creeps.harvesterMinerCreeps < 3){
                     Harvest(memoryObj, spawnObj, creepObj);
                 }
                 else{
@@ -269,12 +232,11 @@ function moveCreeps(memoryObj, spawnObj){
 }
 
 module.exports = {
-    initState:copyState,
-    getBuildSites:countCreeps,
-    setState:canExpand,
-    canExpand:setState,
-    countCreeps:getBuildSites,
-    copyState:initState,
-    makeNewCreep:makeNewCreep,
+    initState:initState,
+    copyState:copyState,
+    getBuildSites:getBuildSites,
+    setState:setState,
+    canExpand:canExpand,
+    countCreeps:countCreeps,
     moveCreeps:moveCreeps
 }

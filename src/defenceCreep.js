@@ -59,7 +59,9 @@ module.exports = function (spawn, creepObj) {
 		}
 		else{
 			var pos = spawn.pos;
-			creepObj.moveToRoomPosition(pos.x, pos.y + 5, spawn.room);
+			if(!creepObj.moveToTargetPosition("base")){
+				creepObj.setTargetPosition("base", pos.x, pos.y + 5, spawn.room.name);
+			}
 		}
     }
 

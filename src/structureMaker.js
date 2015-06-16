@@ -67,14 +67,21 @@ function createNewExtension(spawn){
 
 function createRoomDefenses(room, level){
 
+    /*
     var strip = [];
     //Has to be 2 steps off to be legal
+    var top = room.find(FIND_EXIT_TOP);
+    var strips = [];
+    for(var space in top){
+
+    }
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_TOP), FIND_EXIT_TOP, 2));
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_BOTTOM), FIND_EXIT_BOTTOM, 2));
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_LEFT), FIND_EXIT_LEFT, 2));
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_RIGHT), FIND_EXIT_RIGHT, 2));
     
     createWallDefence(room, strip, level);
+    */
 
 }
 function calculateWalls(room, walls, direction, offset){
@@ -178,7 +185,6 @@ function calculateWalls(room, walls, direction, offset){
     
 }
 function createWallDefence(room, area, level){
-    //If level > 4 start making walls
     var finalAreas = [];
     for(var test in area){
         var found = false;

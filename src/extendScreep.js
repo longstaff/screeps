@@ -73,7 +73,7 @@ module.exports = function (screepPrototype) {
         }
         else{
             var room = Game.rooms[this.memory.loc[location].room];
-            this.moveToRoomPosition(this.memory.loc[location].x, this.memory.loc[location].y, this.memory.loc[location].room);
+            this.moveToRoomPosition(this.memory.loc[location].x, this.memory.loc[location].y, Game.rooms[this.memory.loc[location].room]);
             return true;
         }
     }
@@ -89,6 +89,7 @@ module.exports = function (screepPrototype) {
             y:y,
             room:roomName
         }
+        this.moveToTargetPosition(location);
     }
     screepPrototype.clearTargetPosition = function(location){
         if(!this) return;
