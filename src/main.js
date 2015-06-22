@@ -1,295 +1,195 @@
-//Extend out the creeps
-var ExtendScreep = require('extendScreep');
-ExtendScreep(Creep.prototype);
-
-//Import objects
-var Colony = require('colony');
-var Outpost = require('outpost');
 var Constants = require('const');
-var Scout = require('scoutCreep');
-var expand = true;
+var RoomRunner = require('RoomRunner');
 
-/*
-for(var creepid in Memory.scouts){
-	var creep = Game.creeps[Memory.scouts[creepid]];
-	if(creep){
-	    Scout(creep);
-	}
-}
-*/
-for(var colony in Game.spawns){
-    Colony(Game.spawns[colony]);
-    if(Game.spawns[colony].memory.state !== Constants.STATE_SPREAD){
-        expand = false;
+var WorkerScript = require('Worker');
+var HarvestScript = require('Harvester');
+
+function creepIsDead(name, obj){
+    if(obj === undefined){
+        if(Memory.hasSpawned.indexOf(name) >= 0){
+            //Has been spawned, so kill this object
+            Memory.hasSpawned.splice(Memory.hasSpawned.indexOf(name), 1);
+            Memory.creeps.splice(Memory.creeps.indexOf(name), 1);
+            return true;
+        }
+        else{
+            //Not spawned yet, so just skip this object
+            return true;
+        }
     }
-}
-for(var outpost in Game.flags){
-	if(!Game.flags[outpost].memory.spawn){
-		Game.flags[outpost].memory.spawn = "Spawn1";
-	}
-    Outpost(Game.flags[outpost]);
-    if(Game.flags[outpost].memory.state !== Constants.STATE_SPREAD){
-        expand = false;
+    else if(obj !== undefined){
+        if(Memory.hasSpawned.indexOf(name) < 0){
+            Memory.hasSpawned.push(name);
+        }
     }
+
+    return false;
 }
 
-var scanRoom = function(room){
+function countCreeps(){
+    
+    var creepCount = {}
 
-    var mines = room.find(FIND_SOURCES);
-    for(var possible in mines){
-        var pos = mines[possible].pos;
-        if(pos.findInRange(FIND_FLAGS, 10) == 0 && pos.findInRange(FIND_MY_SPAWNS, 10) == 0){
+    var creeps = Memory.creeps;
+    for(var creep in creeps) {
+        var creepObj = Game.creeps[creeps[creep].name];
+        //Is a valid creep
+        if(creepObj && !creepIsDead(creeps[creep], creepObj)){
 
-            var struct = pos.findInRange(FIND_HOSTILE_STRUCTURES, 10);
-            var spawnKeepers = false;
-            for(var structure in struct){
-                if(struct[structure].owner.username === "Source Keeper"){
-                    spawnKeepers = true;
+            if(!creepCount[creepObj.memory.room]){
+                creepCount[creepObj.memory.room] = {
+                    defenceCreeps:0,
+                    workerCreeps:0,
+                    workerMinerCreeps:0,
+                    workerCarryCreeps:0,
+                    harvesterCreeps:{},
+                    harvesterMinerCreeps:{},
+                    harvesterCarryCreeps:{}
+                };
+            }
+            
+            switch(creepObj.memory.job){
+                case Constants.CREEP_DEFENCE:
+                    creepCount[creepObj.memory.room].defenceCreeps ++;
                     break;
-                }
-            }
-            if(!spawnKeepers){
-                var creeps = pos.findInRange(FIND_HOSTILE_CREEPS, 10);
-                for(var creep in creeps){
-                    if(creeps[creep].owner.username === "Source Keeper"){
-                        spawnKeepers = true;
-                        break;
+                case Constants.CREEP_WORKER:
+                    creepCount[creepObj.memory.room].workerCreeps ++;
+                    break;
+                case Constants.CREEP_WORKER_MINER:
+                    creepCount[creepObj.memory.room].workerMinerCreeps ++;
+                    break;
+                case Constants.CREEP_WORKER_CARRY:
+                    creepCount[creepObj.memory.room].workerCarryCreeps ++;
+                    break;
+                case Constants.CREEP_HARVESTER:
+                    if(!creepCount[creepObj.memory.room].harvesterCreeps[creepObj.memory.outpost]){
+                        creepCount[creepObj.memory.room].harvesterCreeps[creepObj.memory.outpost] = 0;
                     }
-                }
+                    creepCount[creepObj.memory.room].harvesterCreeps[creepObj.memory.outpost] ++;
+                    break;
+                case Constants.CREEP_HARVESTER_MINER:
+                    if(!creepCount[creepObj.memory.room].harvesterMinerCreeps[creepObj.memory.outpost]){
+                        creepCount[creepObj.memory.room].harvesterMinerCreeps[creepObj.memory.outpost] = 0;
+                    }
+                    creepCount[creepObj.memory.room].harvesterMinerCreeps[creepObj.memory.outpost] ++;
+                    break;
+                case Constants.CREEP_HARVESTER_CARRY:
+                    if(!creepCount[creepObj.memory.room].harvesterCarryCreeps[creepObj.memory.outpost]){
+                        creepCount[creepObj.memory.room].harvesterCarryCreeps[creepObj.memory.outpost] = 0;
+                    }
+                    creepCount[creepObj.memory.room].harvesterCarryCreeps[creepObj.memory.outpost] ++;
+                    break;
             }
+        }
+    }
+    
+    return creepCount;
+}
 
-            //TODO: weigh up the benifits with the evil things?
-            if(!spawnKeepers){
-                mine = mines[possible];
-            }
+module.exports = function () {
+    if(!Memory.memoryRooms){
+        Memory.memoryRooms = [];
+    }
+
+    //Add extra rooms and init
+    for(var room in Game.rooms){
+        if(!Memory.memoryRooms[Game.rooms[room].name]){
+            Memory.memoryRooms[Game.rooms[room].name] = RoomRunner.initRoomState(Game.rooms[room]);
+        }
+    }
+    
+    //Find highest room for construction
+    var highestRoom;
+    var levelRoom = 0;
+    for(var room in Memory.memoryRooms){
+        if(RoomRunner.isMine(Memory.memoryRooms[room]) && RoomRunner.getLevel(Memory.memoryRooms[room]) > levelRoom ){
+            levelRoom = RoomRunner.getLevel(Memory.memoryRooms[room]);
+            highestRoom = Memory.memoryRooms[room];
+        }
+    }
+    
+    //Rooms are either without controllers, or need more level throw requests here
+    var requestedCreeps = [];
+    function requestCreep(memoryObject, type){
+        requestedCreeps.push({memory:memoryObject, type:type});
+    }
+    
+    //Loop the rooms
+    var creepCount = countCreeps();
+    for(var room in Memory.memoryRooms){
+        RunRoom.roomLoop(Memory.memoryRooms[room], creepCount[Memory.memoryRooms[room].name], requestCreep);
+    }
+
+    //Check global states
+    var expand = true;
+    var help = false;
+    for(var room in Memory.memoryRooms){
+        if(!RoomRunner.isExpandState(Memory.memoryRooms[room])){
+            expand = false;
+        }
+        if(!RoomRunner.isAlarmState(Memory.memoryRooms[room])){
+            help = Memory.memoryRooms[room];
             break;
         }
     }
-    return mine;
-
-}
-
-var nextRoomName = function(room, direction){
-	var ew = room[0];
-	var ewval = +room[1];
-
-	var ns = room[2];
-	var nsval = +room[3];
-
-	if(direction === FIND_EXIT_TOP){
-		if(ns === "N"){
-			return ew + ewval + ns + (nsval+1);
-		}
-		else{
-			if(nsval === 1){
-				return ew + ewval + "N1";
-			}
-			else{
-				return ew + ewval + ns + (nsval-1);
-			}
-		}
-	}
-	else if(direction === FIND_EXIT_RIGHT){
-		if(ns === "E"){
-			return ew + (ewval+1) + ns + nsval;
-		}
-		else{
-			if(nsval === 1){
-				return "E1" + ns + nsval;
-			}
-			else{
-				return ew + (ewval-1) + ns + nsval;
-			}
-		}
-	}
-	else if(direction === FIND_EXIT_BOTTOM){
-		if(ns === "S"){
-			return ew + ewval + ns + (nsval+1);
-		}
-		else{
-			if(nsval === 1){
-				return ew + ewval + "S1";
-			}
-			else{
-				return ew + ewval + ns + (nsval-1);
-			}
-		}
-	}
-	else if(direction === FIND_EXIT_LEFT){
-		if(ns === "W"){
-			return ew + (ewval+1) + ns + nsval;
-		}
-		else{
-			if(nsval === 1){
-				return "W1" + ns + nsval;
-			}
-			else{
-				return ew + (ewval-1) + ns + nsval;
-			}
-		}
-	}
-}
-
-function makeScoutCreep(room){
-	/*
-	var spawn = Game.spawns.Spawn1;
-	var creep = spawn.createCreep([MOVE, MOVE, MOVE, MOVE, MOVE], undefined, {targetRoom:room});
-	if(typeof(creep) === "string"){
-		Memory.scouts.push(creep);
-	}
-	*/
-}
-
-
-if(expand){
-    //Find a good spot
-    var roomtest = [];
-
-    for(var colony in Game.spawns){
-        roomtest.push(Game.spawns[colony].room.name);
-    }
-    for(var outpost in Game.flags){
-        if(roomtest.indexOf(Game.flags[outpost].room.name)){
-            roomtest.push(Game.flags[outpost].room.name);
+    
+    //If there is no alarm, otherwise needed for defence.
+    if(!help){
+        //If someone requested a creep, make it for them
+        if(requestedCreeps.length){
+            for(var creep in requestedCreeps){
+                RoomRunner.createCreep(highestRoom, requestedCreeps[creep]);
+            }
         }
     }
+    
+    if(help){
+        //Get some defence from rooms and send to alarmed room
+    }
+    else if(exapand){
+        //Check known rooms
+    
+        //If valid but occupied, invade
 
-    var built = false;
+        //If valid but unoccupied, claim if has controller
+    
+        //If no unclaimable rooms, expand with scouts
+    }
 
-    for(var roomId in roomtest){
-        var curRoom = Game.rooms[roomtest[roomId]];
-        var testFlags = curRoom.find(FIND_FLAGS);
-        var allowed = curRoom.controller;
+    //Run invaders
 
-        for(var flag in testFlags){
-            if(!allowed || built){
+    //Run scouts
+    
+    //Loop over creeps here
+    
+    var creeps = Memory.creeps;
+    for(var creep in creeps) {
+        switch(creeps[creep].job){
+            case Constants.CREEP_HARVESTER:
+            case Constants.CREEP_HARVESTER_CARRY:
+            case Constants.CREEP_HARVESTER_MINER:
+                var creepRoom;
+                for(var room in Memory.memoryRooms){
+                    if(Memory.memoryRooms[room].name === creeps[creep].room){
+                        room = Memory.memoryRooms[room];
+                        break;
+                    }
+                }
+                var outpost = RoomRunner.getOutpost(room, creeps[creep].outpost);
+                HarvestScript(Game.creeps[creeps[creep].name], creeps[creep], outpost);
                 break;
-            }
-
-            var pos = testFlags[flag].pos;
-            for(var i = 0; i< 10; i++){
-                var test = curRoom.createConstructionSite(pos.x, pos.y+i, STRUCTURE_SPAWN);
-
-                //TODO: Add the memory from the flag somehow
-                if(test == OK){
-                    built = true;
-                    break;
+            case Constants.CREEP_WORKER:
+            case Constants.CREEP_WORKER_CARRY:
+            case Constants.CREEP_WORKER_MINER:
+                var creepRoom;
+                for(var room in Memory.memoryRooms){
+                    if(Memory.memoryRooms[room].name === creeps[creep].room){
+                        room = Memory.memoryRooms[room];
+                        break;
+                    }
                 }
-                else if(test == ERR_RCL_NOT_ENOUGH){
-                    allowed = false;
-                    break;
-                }
-            }
-        }
-    }
-
-
-    if(!built){
-
-        var mine;
-
-        for(var roomId in roomtest){
-            if(!mine){
-                var room = Game.rooms[roomtest[roomId]];
-    			mine = scanRoom(room);
-            }
-        }
-
-        if(mine){
-            mine.room.createFlag(mine.pos.x, mine.pos.y+4);
-        }
-        else{
-            var nextRooms = [];
-            var needsScout = [];
-            //Expand outside!
-
-    		for(var roomId in roomtest){
-                var room = Game.rooms[roomtest[roomId]];
-
-                //Clockwise we go!
-                var top = room.find(FIND_EXIT_TOP);
-                var right = room.find(FIND_EXIT_RIGHT);
-                var bottom = room.find(FIND_EXIT_BOTTOM);
-                var left = room.find(FIND_EXIT_LEFT);
-
-                var nextRoom;
-                if(top){
-                	nextRoom = nextRoomName(roomtest[roomId], FIND_EXIT_TOP);
-                	if(roomtest.indexOf(nextRoom) < 0){
-                		if(Game.rooms[nextRoom]){
-                			nextRooms.push(nextRoom);
-                		}
-                		else{
-                			needsScout.push(nextRoom);
-                		}
-                	}
-                }
-		        if(bottom){
-                	nextRoom = nextRoomName(roomtest[roomId], FIND_EXIT_BOTTOM);
-                	if(roomtest.indexOf(nextRoom) < 0){
-                		if(Game.rooms[nextRoom]){
-                			nextRooms.push(nextRoom);
-                		}
-                		else{
-                			needsScout.push(nextRoom);
-                		}
-                	}
-		        }
-		        if(left){
-                	nextRoom = nextRoomName(roomtest[roomId], FIND_EXIT_LEFT);
-                	if(roomtest.indexOf(nextRoom) < 0){
-                		if(Game.rooms[nextRoom]){
-                			nextRooms.push(nextRoom);
-                		}
-                		else{
-                			needsScout.push(nextRoom);
-                		}
-                	}
-		        }
-		        if(right){
-                	nextRoom = nextRoomName(roomtest[roomId], FIND_EXIT_RIGHT);
-                	if(roomtest.indexOf(nextRoom) < 0){
-                		if(Game.rooms[nextRoom]){
-                			nextRooms.push(nextRoom);
-                		}
-                		else{
-                			needsScout.push(nextRoom);
-                		}
-                	}
-		        }
-
-            }
-
-            var action = false;
-            for(var roomid in nextRooms){
-                var room = Game.rooms[nextRooms[roomid]];
-                if(room.controler){
-            		//See if room is held by other player and occupy/invade accordingly
-            		if(room.controler.owner.username !== "Galasquin"){
-			            //room.createFlag(room.controler.pos.x, room.controler.pos.y);
-            		}
-                    action = true;
-                }
-                else{
-                	var mine = scanRoom(room);
-			        if(mine){
-			        	var randId;
-			        	do{
-			        		randId = "Flag"+Date.now();
-			        	}
-			        	while(Game.flags[randId]);
-
-			            mine.room.createFlag(mine.pos.x, mine.pos.y+4, randId);
-			            Game.flags[randId].memory.spawn = "Spawn1";
-
-                        action = true;
-			        }
-                }
-            }
-
-            if(!action && Memory.scouts.length === 0){
-                createScout();
-            }
+                WorkerScript(Game.creeps[creeps[creep].name], creeps[creep], creepRoom);
+                break;
         }
     }
 }

@@ -1,241 +1,158 @@
 var Constants = require('const');
 
-function createNextCreep(memoryObj, spawn, state, offenceCreeps, defenceCreeps, harvesterCreeps, extensionCount){
-	switch(state){
-	    case Constants.STATE_AMASS:
-	        if(offenceCreeps%2 == 0){
-				makeOffenceRangeCreep(memoryObj, spawn);
-			}
-			else{
-				makeOffenceShortCreep(memoryObj, spawn);
-			}
+function makeCreep(spawn, object, roomLevel){
+    var array;
+    
+	switch(object.type){
+	    case Constants.CREEP_DEFENCE:
+	        array = makeDefenceRangeCreep(roomLevel);
 	        break;
-	    case Constants.STATE_CHECK:
-	        //NO MANUFACTURE UNTIL CHECKED
+	    case Constants.CREEP_OFFENCE:
+	        array = makeOffenceRangeCreep(roomLevel);
 	        break;
-		case Constants.STATE_HARVEST:
-			if(harvesterCreeps < 2){
-				//Generic ones to start you off
-				makeHarvesterCreep(memoryObj, spawn, extensionCount);
-			}
-			else if(harvesterCreeps < 4){
-				//A couple of miners
-				makeHarvesterMinerCreep(memoryObj, spawn, extensionCount);
-			}
-			else{
-				//The rest are carrying energy
-				makeHarvesterCarryCreep(memoryObj, spawn, extensionCount);
-			}
-			break;
-		case Constants.STATE_DEFENCE:
-			if(defenceCreeps%2 == 0){
-				makeDefenceRangeCreep(memoryObj, spawn, extensionCount);
-			}
-			else{
-				makeDefenceShortCreep(memoryObj, spawn, extensionCount);
-			}
-			break;
-		case Constants.STATE_EXPAND:
-			if(memoryObj.room.controller){
-				makeWorkerCreep(memoryObj, spawn, extensionCount);
-			}
-			break;
-		case Constants.STATE_STORE:
-			if(memoryObj.room.controller){
-				makeWorkerCreep(memoryObj, spawn, extensionCount);
-			}
-			break;
-	    case Constants.STATE_SPREAD:
-	    	if(memoryObj.room.controller){
-				makeWorkerCreep(memoryObj, spawn, extensionCount);
-			}
-	        //makeOffenceCreep();
+	        
+	    case Constants.CREEP_HARVESTER:
+	        array = makeHarvesterCreep(roomLevel);
+	        break;
+	    case Constants.CREEP_HARVESTER_MINER:
+	        array = makeHarvesterMinerCreep(roomLevel);
+	        break;
+	    case Constants.CREEP_HARVESTER_CARRY:
+	        array = makeHarvesterCarryCreep(roomLevel);
+	        break;
+	        
+	    case Constants.CREEP_WORKER:
+	        array = makeWorkerCreep(roomLevel);
+	        break;
+	    case Constants.CREEP_WORKER_MINER:
+	        array = makeWorkerMinerCreep(roomLevel);
+	        break;
+	    case Constants.CREEP_WORKER_CARRY:
+	        array = makeWorkerCarryCreep(roomLevel);
 	        break;
 	}
+	
+    object.memory.job = object.type;
+	return spawn.createCreep(array, undefined, object.memory.job);
 }
 
-function makeDefenceShortCreep(memoryObj, spawn, extensionCount){
+function makeDefenceShortCreep(roomLevel){
 	var array = [MOVE, MOVE, ATTACK];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [TOUGH, TOUGH, TOUGH, MOVE, MOVE, ATTACK, ATTACK];
 	}
-
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_DEFENCE});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeDefenceRangeCreep(memoryObj, spawn, extensionCount){
+function makeDefenceRangeCreep(roomLevel){
 	var array = [MOVE, MOVE, RANGED_ATTACK];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [TOUGH, TOUGH, TOUGH, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_DEFENCE});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeOffenceShortCreep(memoryObj, spawn, extensionCount){
-	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, ATTACK], undefined, {job:Constants.CREEP_OFFENCE});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+function makeOffenceShortCreep(roomLevel){
+	var array = [TOUGH, TOUGH, MOVE, ATTACK];
+	return array;
 }
-function makeOffenceRangeCreep(memoryObj, spawn, extensionCount){
-	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, RANGED_ATTACK], undefined, {job:Constants.CREEP_OFFENCE});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+function makeOffenceRangeCreep(roomLevel){
+	var array = [TOUGH, TOUGH, MOVE, RANGED_ATTACK];
+	return array;
 }
-function makeOffenceHealCreep(memoryObj, spawn, extensionCount){
-	var creep = spawn.createCreep([TOUGH, TOUGH, MOVE, HEAL], undefined, {job:Constants.CREEP_OFFENCE_HEAL});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+function makeOffenceHealCreep(roomLevel){
+	var array = [TOUGH, TOUGH, MOVE, HEAL];
+	return array;
 }
-function makeHarvesterCreep(memoryObj, spawn, extensionCount){
+function makeHarvesterCreep(roomLevel){
 	var array = [WORK, CARRY, MOVE, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [WORK, WORK, CARRY, MOVE, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_HARVESTER});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeHarvesterMinerCreep(memoryObj, spawn, extensionCount){
+function makeHarvesterMinerCreep(roomLevel){
 	var array = [WORK, WORK, CARRY, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [WORK, WORK, WORK, CARRY, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_HARVESTER_MINER});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeHarvesterCarryCreep(memoryObj, spawn, extensionCount){
+function makeHarvesterCarryCreep(roomLevel){
 	var array = [CARRY, CARRY, CARRY, MOVE, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_HARVESTER_CARRY});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeWorkerCreep(memoryObj, spawn, extensionCount){
+function makeWorkerCreep(roomLevel){
 	var array = [WORK, CARRY, CARRY, MOVE, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [WORK, WORK, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeWorkerMinerCreep(memoryObj, spawn, extensionCount){
+function makeWorkerMinerCreep(roomLevel){
 	var array = [WORK, WORK, CARRY, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [WORK, WORK, WORK, CARRY, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER_MINER});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
+	return array;
 }
-function makeWorkerCarryCreep(memoryObj, spawn, extensionCount){
+function makeWorkerCarryCreep(roomLevel){
 	var array = [CARRY, CARRY, CARRY, MOVE, MOVE];
-	if(extensionCount > 15){
+	if(roomLevel > 3){
 		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 9){
+	if(roomLevel > 2){
 		array = [CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE];
 	}
-	if(extensionCount > 4){
+	if(roomLevel > 1){
 		array = [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
 	}
-	var creep = spawn.createCreep(array, undefined, {job:Constants.CREEP_WORKER_CARRY});
-	if(typeof(creep) === "string"){
-		memoryObj.memory.screeps.push(creep);
-	}
-}
-
-function screepIsDead(memoryObj, name, obj){
-    if(obj === undefined){
-        if(memoryObj.memory.hasSpawned.indexOf(name) >= 0){
-            //Has been spawned, so kill this object
-            memoryObj.memory.hasSpawned.splice(memoryObj.memory.hasSpawned.indexOf(name), 1);
-            memoryObj.memory.screeps.splice(memoryObj.memory.screeps.indexOf(name), 1);
-            return true;
-        }
-        else{
-            //Not spawned yet, so just skip this object
-            return true;
-        }
-    }
-    else if(obj !== undefined){
-        if(memoryObj.memory.hasSpawned.indexOf(name) < 0){
-            memoryObj.memory.hasSpawned.push(name);
-        }
-    }
-
-    return false;
+	return array;
 }
 
 module.exports = {
-    createNextCreep:createNextCreep,
-    screepIsDead:screepIsDead,
-    makeDefenceShortCreep:makeDefenceShortCreep,
-    makeDefenceRangeCreep:makeDefenceRangeCreep,
-	makeOffenceHealCreep:makeOffenceHealCreep,
-    makeOffenceShortCreep:makeOffenceShortCreep,
-    makeOffenceRangeCreep:makeOffenceRangeCreep,
-    makeHarvesterCreep:makeHarvesterCreep,
-    makeHarvesterMinerCreep:makeHarvesterMinerCreep,
-    makeHarvesterCarryCreep:makeHarvesterCarryCreep,
-    makeWorkerCreep:makeWorkerCreep,
-    makeWorkerMinerCreep:makeWorkerMinerCreep,
-    makeWorkerCarryCreep:makeWorkerCarryCreep
+    makeCreep:makeCreep
 }

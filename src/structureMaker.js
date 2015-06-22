@@ -1,30 +1,38 @@
-function createRoads(spawn){
-    var pathToMine;
-    var sources = spawn.pos.findInRange(FIND_SOURCES, 10);
+var Constants = require('const');
+
+function createRoads(outposts, room){
+    
     var tiles = [];
     
-    roadAroundPoint(spawn, spawn.pos, tiles);
+    for(var outpost in outposts){
+        var pos = room.getPositionAt(outposts[outpost].posX, outposts[outpost].posY);
     
-    for(var source in sources){
-        roadAroundPoint(spawn, sources[source].pos, tiles);
+        var pathToMine;
+        var sources = pos.findInRange(FIND_SOURCES, Constants.DISTANCE_MINE);
+        
+        roadAroundPoint(room, pos, pos, tiles);
+        
+        for(var source in sources){
+            roadAroundPoint(room, pos, sources[source].pos, tiles);
+        }
+        
+        if(spawn.room.controller){
+            roadAroundPoint(room, pos, room.controller.pos, tiles);
+        }
+    
+        makeRoadOfPath(room, tiles);
     }
-    
-    if(spawn.room.controller){
-        roadAroundPoint(spawn, spawn.room.controller.pos, tiles);
-    }
-    
-    makeRoadOfPath(spawn, tiles);
 }
-function roadAroundPoint(spawn, point, tiles){
+function roadAroundPoint(room, from, to, tiles){
     for(var i=0; i<9; i++){
         if(i != 4){
-            var radPoint = spawn.room.getPositionAt(point.x -1 + (i%3), point.y -1 + (Math.floor(i/3)));
+            var radPoint = room.getPositionAt(to.x -1 + (i%3), to.y -1 + (Math.floor(i/3)));
             addRoadPathTo(tiles, radPoint);
-            var pathToPoint = spawn.room.findPath(radPoint, spawn.pos, {ignoreCreeps:true});
+            var pathToPoint = room.findPath(radPoint, from, {ignoreCreeps:true});
             
-    	    for(var step in pathToPoint){
-    	        addRoadPathTo(tiles, pathToPoint[step]);
-    	    }
+            for(var step in pathToPoint){
+                addRoadPathTo(tiles, pathToPoint[step]);
+            }
         }
     }
 }
@@ -37,35 +45,48 @@ function addRoadPathTo(arr, point){
     }
     arr.push(point);
 }
-function makeRoadOfPath(spawn, path){
+function makeRoadOfPath(room, path){
     for(var step in path){
-        spawn.room.createConstructionSite(path[step].x, path[step].y, STRUCTURE_ROAD);
+        room.createConstructionSite(path[step].x, path[step].y, STRUCTURE_ROAD);
     }
 }
 
-function createNewExtension(spawn){
+function buildExtensions(level, outposts, room){
+    var allowed = [0,5,10,20,30,40,50,60];
+    var currentAllowed = allowed[level];
+    var currentCount = room.find(FIND_MY_STRUCTURES, {
+        filter:function(i){
+            return i.structureType === STRUCTURE_EXTENSION;
+        }
+    }).concat(room.find(FIND_CONSTRUCTION_SITES, {
+        filter:function(i){
+            return i.structureType === STRUCTURE_EXTENSION;
+        }
+    })).length;
     
-    var buildPos = spawn.pos;
+    if(currentCount < currentAllowed){
+        for(var i=currentCount; i<currentAllowed; i++){
+            createNewExtension(outposts[i%outposts.length], room);
+        }
+    }
+}
+function createNewExtension(object, room){
+    
+    //TODO: Find a better way to do this!
+    var buildPos = room.getPositionAt(object.posX, object.posY);
     var construct = -7;
     var i = 0;
     
     for(var i=0; i<25; i++){
-        construct = spawn.room.createConstructionSite(buildPos.x -2 + (i % 5), buildPos.y -7 + (2*Math.floor(i / 5)), STRUCTURE_EXTENSION);
+        construct = room.createConstructionSite(buildPos.x -2 + (i % 5), buildPos.y -7 + (2*Math.floor(i / 5)), STRUCTURE_EXTENSION);
         
         if(construct !== -7 && construct !== -10){
             break;
         }
     }
-        
-    if(construct === OK){
-        return true;
-    }
-    else{
-        return false;
-    }
 }
 
-function createRoomDefenses(room, level){
+function createRoomDefenses(exits, room){
 
     /*
     var strip = [];
@@ -82,8 +103,19 @@ function createRoomDefenses(room, level){
     
     createWallDefence(room, strip, level);
     */
-
 }
+
+function buildLocalRamparts(outposts, room){
+    //Build small walls for each of the outposts if there is a spawn.
+    
+    /*
+    for(var outpost in outposts){
+        
+    }
+    */
+}
+
+/*
 function calculateWalls(room, walls, direction, offset){
     var strip = [];
 
@@ -205,9 +237,11 @@ function createWallDefence(room, area, level){
         }
     }
 }
+*/
 
 module.exports = {
-    createRoads:createRoads,
-    createNewExtension:createNewExtension,
-    createRoomDefenses:createRoomDefenses
+    buildExtensions:buildExtensions,
+    buildLocalRamparts:buildLocalRamparts,
+    buildRoads:createRoads,
+    buildWalls:createRoomDefenses
 }

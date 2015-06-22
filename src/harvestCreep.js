@@ -1,35 +1,9 @@
 var Constants = require('const');
+var OutpostRunner = require('OutpostRunner');
 
-module.exports = function (object, spawn, creepObj) {
-    var target = object;
-    //Test if a spawn or a flag
+module.exports = function (creepObj, memory, outpostMemory) {
     
-    if(!object.energyCapacity){
-        var extensions = object.pos.findInRange(FIND_MY_STRUCTURES, 15, {
-            filter:function(i){
-                return i.structureType === STRUCTURE_EXTENSION && i.energy < i.energyCapacity;
-            }
-        });
-        if(extensions.length === 0){
-            target = spawn;
-        }
-        else{
-            target = extensions[0];
-        }
-    }
-    else{
-        target = spawn;
-    }
-    
-    if(target === spawn && spawn.energy === spawn.energyCapacity){
-        var extensions = spawn.pos.findInRange(FIND_MY_STRUCTURES, 15);
-        for(var struct in extensions){
-            if(extensions[struct].structureType === STRUCTURE_EXTENSION && extensions[struct].energy < extensions[struct].energyCapacity){
-                target = extensions[struct];
-                break;
-            }
-        }
-    }
+    var target = OutpostRunner.getDepositTarget(outpostMemory);
 
     //Put it somewhere
     if(creepObj.energy < creepObj.energyCapacity) {
@@ -70,8 +44,8 @@ module.exports = function (object, spawn, creepObj) {
         if(!steal || creepObj.energy < creepObj.energyCapacity){
             if(creepObj.memory.job === Constants.CREEP_HARVESTER_CARRY){
                 //If a carryer, find the closest miner to steal from.
-                var sources = object.pos.findInRange(FIND_SOURCES, 10);
-                var closest = sources[0].pos.findInRange(FIND_MY_CREEPS, 2, {
+                var source = OutpostRunner.getSources(outpostMemory, memory.target);
+                var closest = source.pos.findInRange(FIND_MY_CREEPS, 2, {
                     filter:function(i){
                         return (i.memory.job === Constants.CREEP_HARVESTER_MINER || i.memory.job === Constants.CREEP_HARVESTER);
                     }
