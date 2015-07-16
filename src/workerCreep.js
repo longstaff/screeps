@@ -1,13 +1,17 @@
 var Constants = require('const');
 
-module.exports = function (object, spawn, creepObj, currentState, buildSites) {
+module.exports = function (creepObj, memory, room) {
+
+    //Populate from room
+    var buildSites = room.getBuildSites();
+    var object = room.getSpawn();
 
     var target;
     if(buildSites.length > 0){
         target = buildSites[0];
     }
     else{
-        target = object.room.controller ? object.room.controller : spawn.room.controller;
+        target = room.getRoomObj().controller;
     }
 
     var steal = false;
@@ -43,7 +47,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
     if(creepObj.energy === 0){
         creepObj.memory.task = "recharge";
     }
-    else if(creepObj.energy === creepObj.energyCapacity && currentState === Constants.STATE_EXPAND){
+    else if(creepObj.energy === creepObj.energyCapacity && room.getState() === Constants.STATE_EXPAND){
         creepObj.memory.task = "build";
     }
     else if(creepObj.energy === creepObj.energyCapacity){
@@ -98,34 +102,10 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
             }
 
             if(!building && !repairTarget){
-                var targets = [];
-                var ramparts = spawn.room.find(FIND_MY_STRUCTURES, {
-                    filter: function(i) {
-                        return i.structureType === STRUCTURE_RAMPART;
-                    }
-                });
-                for(var rampart in ramparts){
-                    if(!ramparts[rampart].pos.isNearTo(spawn) && ramparts[rampart].hits < ramparts[rampart].hitsMax/2){
-                        targets.push(ramparts[rampart]);
-                    }
-                }
-                var staticObjs = spawn.room.find(FIND_STRUCTURES, {
-                    filter: function(i) {
-                        return i.structureType === STRUCTURE_ROAD || i.structureType === STRUCTURE_WALL;
-                    }
-                });
-                for(var staticObj in staticObjs){
-                    if(staticObjs[staticObj].hits < staticObjs[staticObj].hitsMax/2){
-                        targets.push(staticObjs[staticObj]);
-                    }
-                }
-
-                //If none locked on, scan to find a new one
-                for(var repair in targets){
-                    //Save ID and assign as current target
-                    creepObj.memory.repairingId = targets[repair].id;
-                    repairTarget = targets[repair];
-                    break;
+                var newTarget = room.getRepairTarget();
+                if(newTarget){
+                    creepObj.memory.repairingId = newTarget.id;
+                    repairTarget = newTarget;
                 }
             }
 
@@ -138,7 +118,7 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
 
             if(!building && !repairing){
 
-                var controller = object.room.controller ? object.room.controller : spawn.room.controller;
+                var controller = room.getRoomObj().controller;
                 creepObj.moveToRoomObject(controller);
                 creepObj.upgradeController(controller);
 
@@ -151,26 +131,13 @@ module.exports = function (object, spawn, creepObj, currentState, buildSites) {
         creepObj.memory.givingEnergy = null;
 
         if(!steal || creepObj.energy < creepObj.energyCapacity){
-            if(object.energyCapacity){
-                if(object.energy === 0 || currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST){
-                    creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
-                }
-                else{
-                    creepObj.moveToRoomObject(object);
-                    if(currentState !== Constants.STATE_DEFENCE && currentState !== Constants.STATE_HARVEST){
-                        object.transferEnergy(creepObj);
-                    }
-                }
+            if(object.energy === 0 || room.getState() === Constants.STATE_DEFENCE || room.getState() === Constants.STATE_HARVEST){
+                creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
             }
             else{
-                if(spawn.energy === 0 || currentState === Constants.STATE_DEFENCE || currentState === Constants.STATE_HARVEST){
-                    creepObj.moveToRoomPosition(object.pos.x+3, object.pos.y, object.room);
-                }
-                else{
-                    creepObj.moveToRoomObject(spawn);
-                    if(currentState !== Constants.STATE_DEFENCE && currentState !== Constants.STATE_HARVEST){
-                        spawn.transferEnergy(creepObj);
-                    }
+                creepObj.moveToRoomObject(object);
+                if(room.getState() !== Constants.STATE_DEFENCE && room.getState() !== Constants.STATE_HARVEST){
+                    object.transferEnergy(creepObj);
                 }
             }
         }

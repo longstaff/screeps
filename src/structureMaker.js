@@ -1,25 +1,26 @@
 var Constants = require('const');
 
 function createRoads(outposts, room){
-    
+
     var tiles = [];
-    
+
     for(var outpost in outposts){
+
         var pos = room.getPositionAt(outposts[outpost].posX, outposts[outpost].posY);
-    
+
         var pathToMine;
         var sources = pos.findInRange(FIND_SOURCES, Constants.DISTANCE_MINE);
-        
+
         roadAroundPoint(room, pos, pos, tiles);
-        
+
         for(var source in sources){
             roadAroundPoint(room, pos, sources[source].pos, tiles);
         }
-        
-        if(spawn.room.controller){
+
+        if(room.controller){
             roadAroundPoint(room, pos, room.controller.pos, tiles);
         }
-    
+
         makeRoadOfPath(room, tiles);
     }
 }
@@ -29,7 +30,7 @@ function roadAroundPoint(room, from, to, tiles){
             var radPoint = room.getPositionAt(to.x -1 + (i%3), to.y -1 + (Math.floor(i/3)));
             addRoadPathTo(tiles, radPoint);
             var pathToPoint = room.findPath(radPoint, from, {ignoreCreeps:true});
-            
+
             for(var step in pathToPoint){
                 addRoadPathTo(tiles, pathToPoint[step]);
             }
@@ -63,7 +64,7 @@ function buildExtensions(level, outposts, room){
             return i.structureType === STRUCTURE_EXTENSION;
         }
     })).length;
-    
+
     if(currentCount < currentAllowed){
         for(var i=currentCount; i<currentAllowed; i++){
             createNewExtension(outposts[i%outposts.length], room);
@@ -71,15 +72,15 @@ function buildExtensions(level, outposts, room){
     }
 }
 function createNewExtension(object, room){
-    
+
     //TODO: Find a better way to do this!
     var buildPos = room.getPositionAt(object.posX, object.posY);
     var construct = -7;
     var i = 0;
-    
+
     for(var i=0; i<25; i++){
         construct = room.createConstructionSite(buildPos.x -2 + (i % 5), buildPos.y -7 + (2*Math.floor(i / 5)), STRUCTURE_EXTENSION);
-        
+
         if(construct !== -7 && construct !== -10){
             break;
         }
@@ -100,17 +101,17 @@ function createRoomDefenses(exits, room){
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_BOTTOM), FIND_EXIT_BOTTOM, 2));
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_LEFT), FIND_EXIT_LEFT, 2));
     strip = strip.concat(calculateWalls(room, room.find(FIND_EXIT_RIGHT), FIND_EXIT_RIGHT, 2));
-    
+
     createWallDefence(room, strip, level);
     */
 }
 
 function buildLocalRamparts(outposts, room){
     //Build small walls for each of the outposts if there is a spawn.
-    
+
     /*
     for(var outpost in outposts){
-        
+
     }
     */
 }
@@ -136,7 +137,7 @@ function calculateWalls(room, walls, direction, offset){
                 strip.push({x:x, y:y});
                 x--;
             }
-            
+
             x = walls[walls.length-1].x;
             while(
                 (room.lookAt(x, y)[0].terrain !== 'wall' && room.lookAt(x, y-1)[0].terrain !== 'wall') && x < 49
@@ -158,7 +159,7 @@ function calculateWalls(room, walls, direction, offset){
                 strip.push({x:x, y:y});
                 x--;
             }
-            
+
             x = walls[walls.length-1].x;
             while(
                 (room.lookAt(x, y)[0].terrain !== 'wall' && room.lookAt(x, y+1)[0].terrain !== 'wall') && x < 49
@@ -180,7 +181,7 @@ function calculateWalls(room, walls, direction, offset){
                 strip.push({x:x, y:y});
                 y--;
             }
-            
+
             x = walls[walls.length-1].y;
             while(
                 (room.lookAt(x, y)[0].terrain !== 'wall' && room.lookAt(x-1, y)[0].terrain !== 'wall') && y < 49
@@ -202,7 +203,7 @@ function calculateWalls(room, walls, direction, offset){
                 strip.push({x:x, y:y});
                 y--;
             }
-            
+
             y = walls[walls.length-1].y;
             while(
                 (room.lookAt(x, y)[0].terrain !== 'wall' && room.lookAt(x+1, y)[0].terrain !== 'wall') && y < 49
@@ -212,9 +213,9 @@ function calculateWalls(room, walls, direction, offset){
             }
         }
     }
-    
+
     return strip;
-    
+
 }
 function createWallDefence(room, area, level){
     var finalAreas = [];
@@ -230,7 +231,7 @@ function createWallDefence(room, area, level){
             finalAreas.push(area[test]);
         }
     }
-    
+
     if(finalAreas.length){
         for(var pos in finalAreas){
             room.createConstructionSite(finalAreas[pos].x, finalAreas[pos].y, STRUCTURE_RAMPART);

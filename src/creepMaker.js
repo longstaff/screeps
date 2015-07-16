@@ -2,7 +2,7 @@ var Constants = require('const');
 
 function makeCreep(spawn, object, roomLevel){
     var array;
-    
+
 	switch(object.type){
 	    case Constants.CREEP_DEFENCE:
 	        array = makeDefenceRangeCreep(roomLevel);
@@ -10,7 +10,7 @@ function makeCreep(spawn, object, roomLevel){
 	    case Constants.CREEP_OFFENCE:
 	        array = makeOffenceRangeCreep(roomLevel);
 	        break;
-	        
+
 	    case Constants.CREEP_HARVESTER:
 	        array = makeHarvesterCreep(roomLevel);
 	        break;
@@ -20,7 +20,7 @@ function makeCreep(spawn, object, roomLevel){
 	    case Constants.CREEP_HARVESTER_CARRY:
 	        array = makeHarvesterCarryCreep(roomLevel);
 	        break;
-	        
+
 	    case Constants.CREEP_WORKER:
 	        array = makeWorkerCreep(roomLevel);
 	        break;
@@ -30,10 +30,28 @@ function makeCreep(spawn, object, roomLevel){
 	    case Constants.CREEP_WORKER_CARRY:
 	        array = makeWorkerCarryCreep(roomLevel);
 	        break;
+
+        case Constants.CREEP_CAMPER:
+            array = makeCamperCreep(roomLevel);
+            break;
 	}
-	
+
     object.memory.job = object.type;
-	return spawn.createCreep(array, undefined, object.memory.job);
+	return spawn.createCreep(array, undefined, object.memory);
+}
+
+function makeCamperCreep(roomLevel){
+    var array = [MOVE, MOVE, ATTACK];
+    if(roomLevel > 3){
+        array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK];
+    }
+    if(roomLevel > 2){
+        array = [TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK];
+    }
+    if(roomLevel > 1){
+        array = [TOUGH, TOUGH, TOUGH, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK];
+    }
+    return array;
 }
 
 function makeDefenceShortCreep(roomLevel){
