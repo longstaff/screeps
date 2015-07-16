@@ -23,7 +23,7 @@ Outpost.prototype.loop = function(){
 
     if(spawnKeepers > this._count.camperCreeps){
         this._requestCallback({
-            room:this._memory.room,
+            room:this._room._memory.name,
             outpost:this._memory.id,
             target:this._memory.sources[i].id
         }, Constants.CREEP_CAMPER);
@@ -33,7 +33,7 @@ Outpost.prototype.loop = function(){
     else if((this._room.level < 2 && this._count.harvesterCreeps < 1) || (this._count.harvesterCreeps === 0 && this._count.harvesterMinerCreeps === 0)){
         //If low level then make basic one
         this._requestCallback({
-            room:this._memory.room,
+            room:this._room._memory.name,
             outpost:this._memory.id,
             target:this._memory.sources[0]
         }, Constants.CREEP_HARVESTER);
@@ -41,7 +41,7 @@ Outpost.prototype.loop = function(){
     else if(this._count.harvesterMinerCreeps < 2*this._memory.sources.length){
         //2 miners per source
         this._requestCallback({
-            room:this._memory.room,
+            room:this._room._memory.name,
             outpost:this._memory.id,
             target:this._memory.sources[this._memory.creepIncCount % this._memory.sources.length]
         }, Constants.CREEP_HARVESTER_MINER);
@@ -50,7 +50,7 @@ Outpost.prototype.loop = function(){
     else if(this._count.harvesterCarryCreeps < 2*this._memory.sources.length){
         //2 carriers per source
         this._requestCallback({
-            room:this._memory.room,
+            room:this._room._memory.name,
             outpost:this._memory.id,
             target:this._memory.sources[this._memory.creepIncCount % this._memory.sources.length]
         }, Constants.CREEP_HARVESTER_CARRY);
