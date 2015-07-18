@@ -94,15 +94,6 @@ function makeOffenceHealCreep(roomLevel){
 }
 function makeHarvesterCreep(roomLevel){
 	var array = [WORK, CARRY, MOVE, MOVE];
-	if(roomLevel > 3){
-		array = [WORK, WORK, WORK, WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE];
-	}
-	if(roomLevel > 2){
-		array = [WORK, WORK, WORK, WORK, CARRY, CARRY, MOVE, MOVE];
-	}
-	if(roomLevel > 1){
-		array = [WORK, WORK, CARRY, MOVE, MOVE];
-	}
 	return array;
 }
 function makeHarvesterMinerCreep(roomLevel){

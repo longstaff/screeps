@@ -26,7 +26,6 @@ module.exports = function (creepObj, memory, room, outpost) {
                     if(!creepObj.memory.stolenBy || creepObj.memory.stolenBy !== creepsNear[creep].name){
 
                         if((creepsNear[creep].memory.job === Constants.CREEP_HARVESTER ||
-                            creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_MINER ||
                             creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_CARRY
                             ) && creepsNear[creep].energy > 0){
 
@@ -39,6 +38,16 @@ module.exports = function (creepObj, memory, room, outpost) {
                                 if(creepObj.energy === creepObj.energyCapacity){
                                     break;
                                 }
+                            }
+                        }
+                        //Always take from a miner
+                        else if(creepsNear[creep].memory.job === Constants.CREEP_HARVESTER_MINER && creepsNear[creep].energy > 0){
+                            creepsNear[creep].transferEnergy(creepObj);
+                            creepsNear[creep].memory.stolenBy = creepObj.name;
+                            creepsNear[creep].cancelOrder("moveTo");
+                            steal = true;
+                            if(creepObj.energy === creepObj.energyCapacity){
+                                break;
                             }
                         }
 

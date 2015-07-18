@@ -20,7 +20,6 @@ Outpost.prototype.loop = function(){
             break;
         }
     }
-
     if(spawnKeepers > this._count.camperCreeps){
         this._requestCallback({
             room:this._room._memory.name,
@@ -30,7 +29,7 @@ Outpost.prototype.loop = function(){
     }
     //TODO: THIS NEEDS TO BE BETTER DONE TO MAKE SURE THEY ARE EQUALLY SPLIT OVER TIME
     //Check count here
-    else if((this._room.level < 2 && this._count.harvesterCreeps < 1) || (this._count.harvesterCreeps === 0 && this._count.harvesterMinerCreeps === 0)){
+    else if((this._room.level < 2 && this._count.harvesterCreeps < 1) || (this._count.harvesterCreeps === 0 && (this._count.harvesterCarryCreeps === 0 || this._count.harvesterMinerCreeps === 0))){
         //If low level then make basic one
         this._requestCallback({
             room:this._room._memory.name,
